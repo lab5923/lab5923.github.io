@@ -1,0 +1,1619 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1">
+<title>tailgater 簡介</title>
+<!--
+  tailgater：F-16 一對一纏鬥、強化學習的介紹投影片（課程用版本）。單一檔案、完全離線。
+  操作：→ ↓ 空白 PageDown＝下一步；← ↑ PageUp＝上一步；Home / End；網址帶頁碼（#7）直接跳頁。
+-->
+<style>
+:root{
+  --bg:#f8f4ea; --ink:#0f1b33; --blue:#1553e0; --blue2:#d3e2ff; --blue3:#8fb1f5;
+  --red:#e0302b; --red2:#ffdad7; --red3:#a31d1a; --amber:#f2a900; --amber2:#fff0c4; --mute:#566177; --line:#d8d0bd;
+  --sans:"Noto Sans CJK TC","Noto Sans TC","Microsoft JhengHei","PingFang TC","Heiti TC","Noto Sans CJK JP","WenQuanYi Micro Hei","Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Consolas,"DejaVu Sans Mono","Noto Sans Mono CJK TC",monospace;
+  --serif:"STIX Two Text","Cambria Math","Cambria","Times New Roman","Liberation Serif","DejaVu Serif",serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{position:fixed;inset:0}   /* 1920 寬的舞台不撐大手機的版面 */
+html,body{height:100%;background:#e6dfcd;overflow:hidden;font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;background:var(--bg);user-select:none;-webkit-user-select:none}
+.page{position:absolute;inset:0;display:none;overflow:hidden;
+  background:radial-gradient(1100px 700px at 88% 6%,rgba(21,83,224,.09),transparent 62%),radial-gradient(900px 600px at 4% 98%,rgba(224,48,43,.08),transparent 62%),var(--bg)}
+.page::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(15,27,51,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(15,27,51,.05) 1px,transparent 1px);background-size:60px 60px}
+.page.on{display:block}
+html.short [data-deck=full], html:not(.short) [data-deck=short]{display:none!important}
+.abs{position:absolute}
+.fill{position:absolute;left:0;top:0;width:1920px;height:1080px}
+.kick{position:absolute;left:96px;top:58px;font:700 25px var(--mono);letter-spacing:.14em;color:var(--mute)}
+.kick i{display:inline-block;width:52px;height:8px;background:var(--blue);margin-right:16px;vertical-align:middle;border-radius:2px}
+.kick.rd i{background:var(--red)}
+.ttl{position:absolute;left:96px;top:100px;font-size:84px;font-weight:900;line-height:1.12;letter-spacing:-.005em}
+.b{color:var(--blue)} .r{color:var(--red)} .m{color:var(--mute)}
+.mono{font-family:var(--mono)}
+/* 數學排版：變數用斜體襯線，下標／上標縮小，分數用上下堆疊 */
+.v{font-family:var(--serif);font-style:italic;font-weight:500}
+.mth{font-family:var(--serif);font-weight:500}
+.mth sub,.mth sup,.v sub,.v sup{font-size:.62em;font-style:normal;line-height:0}
+.mth sub,.v sub{vertical-align:-.28em} .mth sup,.v sup{vertical-align:.5em}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;line-height:1.2;margin:0 .15em}
+.fr>b{font-weight:inherit;border-bottom:.07em solid currentColor;padding:0 .2em}
+.fr>u{text-decoration:none;padding:0 .2em}
+.card .refs h4{font-size:24px;font-weight:900;margin:10px 0 4px;color:var(--ink)} .card .refs h4:first-child{margin-top:0}
+.card .refs p{font-size:18px;line-height:1.35;margin:0 0 8px;color:#2a3550}
+.card .refs p span{display:block;font-size:16px;font-weight:700;color:var(--blue);margin-top:2px}
+.card{position:absolute;background:#fff;border:4px solid var(--ink);border-radius:22px;box-shadow:10px 10px 0 var(--ink);padding:26px 32px}
+.card.bl{box-shadow:10px 10px 0 var(--blue)} .card.rd{box-shadow:10px 10px 0 var(--red)}
+.card.fillb{background:var(--blue);color:#fff;border-color:var(--ink)} .card.fillr{background:var(--red);color:#fff}
+.card.fillk{background:var(--ink);color:#fff;box-shadow:10px 10px 0 var(--amber)}
+.card h3{font-size:44px;font-weight:900;line-height:1.15}
+.card p{font-size:30px;line-height:1.45;margin-top:10px}
+.card p.s{font-size:26px;color:var(--mute)}
+.fillb p.s,.fillr p.s,.fillk p.s{color:rgba(255,255,255,.82)}
+.cmp{margin-top:14px;padding-top:10px;border-top:3px solid var(--line);font-size:29px;line-height:1.35}
+.cmp .m{font-size:24px;font-weight:700}
+.cmp div:nth-child(2)::before{content:"我們　";color:var(--mute);font-size:23px}
+.cmp .rr2::before{content:"junhwa　";color:var(--mute);font-size:23px}
+.num{font-family:var(--mono);font-weight:800}
+.chip{display:inline-block;padding:6px 20px;border:3px solid var(--ink);border-radius:999px;font:700 28px var(--mono);background:#fff}
+.chip.b{background:var(--blue);color:#fff;border-color:var(--ink)} .chip.rr{background:var(--red);color:#fff}
+.chip.am{background:var(--amber)}
+.code{background:var(--ink);color:#e9efff;border-radius:16px;padding:20px 24px;font:500 25px/1.5 var(--mono);word-break:break-all;box-shadow:8px 8px 0 var(--blue)}
+svg text{font-family:var(--sans)}
+.ji{width:100%;height:100%;display:block}
+.note{position:absolute;font-size:24px;color:var(--mute)}
+/* 進場：頁面開始切入後再依序升起 */
+.page.on .rise{animation:rise .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--t0,0s) + var(--i,0)*.09s)}
+@keyframes rise{from{opacity:0;transform:translateY(34px)}to{opacity:1;transform:none}}
+.page.on .pop{animation:pop .6s cubic-bezier(.3,1.5,.5,1) both;animation-delay:calc(var(--t0,0s) + var(--i,0)*.1s)}
+@keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+.page.on .grow{transform-origin:50% 100%;animation:grow .9s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--t0,0s) + var(--i,0)*.1s)}
+@keyframes grow{from{transform:scaleY(0)}to{transform:none}}
+.page.on .growx{transform-origin:0 50%;animation:growx .9s cubic-bezier(.2,.9,.2,1) both;animation-delay:calc(var(--t0,0s) + var(--i,0)*.1s)}
+@keyframes growx{from{transform:scaleX(0)}to{transform:none}}
+.page.on .draw{stroke-dasharray:var(--len,2000);animation:draw 1.4s ease-out both;animation-delay:calc(var(--t0,0s) + var(--i,0)*.15s)}
+@keyframes draw{from{stroke-dashoffset:var(--len,2000)}to{stroke-dashoffset:0}}
+html.still .page.on .rise,html.still .page.on .pop,html.still .page.on .grow,html.still .page.on .growx,html.still .page.on .draw{animation-delay:0s!important;animation-duration:.001s!important}
+html:not(.lam) [data-lam]{display:none!important}      /* LAM 內容：網址加 ?lam 才顯示 */
+/* 揭開：data-step="k" 在第 k 步出現，data-until="m" 在第 m 步消失 */
+[data-step]{transition:opacity .55s ease,transform .55s cubic-bezier(.2,.8,.2,1)}
+[data-step]:not(.shown){opacity:0;transform:translateY(26px);pointer-events:none}
+svg [data-step]:not(.shown){transform:none}
+/* 從上面掉下來壓住舊內容（三種角色 → 改成互相當陪練） */
+.drop[data-step]{transition:transform .75s cubic-bezier(.3,1.35,.5,1),opacity .2s;transform:rotate(-1.5deg)}
+.drop[data-step]:not(.shown){opacity:1;transform:translateY(-1150px) rotate(-9deg)}
+html.still [data-step]{transition:none}
+.dim{opacity:.3!important;transition:opacity .4s}
+/* 導覽 */
+/* 開場：手機請改用電腦；電腦點一下或按任意鍵 → 全螢幕（只有這一次，之後按 F 切換） */
+#gate{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(246,241,230,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);cursor:pointer}
+#gate[hidden]{display:none}
+#gate .gc{background:#fff;border:4px solid var(--ink);border-radius:20px;box-shadow:10px 10px 0 var(--blue);padding:32px 44px;max-width:min(680px,86vw);text-align:center;font-family:var(--sans);color:var(--ink)}
+#gate .gt{font-size:clamp(22px,3.2vw,40px);font-weight:900;line-height:1.3}
+#gate .gs{font-size:clamp(15px,1.6vw,22px);color:var(--mute);margin-top:12px;line-height:1.5}
+#gate kbd{display:inline-block;border:3px solid var(--ink);border-radius:8px;padding:0 10px;font:800 1em var(--mono);background:var(--amber)}
+#gate button{margin-top:18px;font:700 15px var(--sans);color:var(--mute);background:none;border:2px solid var(--line);border-radius:999px;padding:6px 16px;cursor:pointer}
+#hud{position:absolute;left:0;right:0;bottom:0;height:34px;pointer-events:none;z-index:50}
+#kh{position:absolute;left:40px;bottom:6px;font:700 21px var(--mono);color:#b27a00}
+#kh kbd{display:inline-block;border:3px solid #b27a00;border-radius:6px;padding:0 7px;margin-right:8px;font:800 19px var(--mono)}
+#knobs{position:absolute;right:56px;top:56px;width:1180px;max-height:950px;overflow:auto;background:#fff;border:4px solid var(--ink);border-radius:20px;
+  box-shadow:14px 14px 0 var(--amber);padding:24px 32px 26px;z-index:60;cursor:auto;user-select:text;-webkit-user-select:text}
+#knobs h3{font-size:36px;font-weight:900;margin:0 0 6px}
+#knobs .lg{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
+#knobs .kr{display:grid;grid-template-columns:330px 300px 1fr 128px;gap:14px;align-items:center;padding:10px 0;border-top:2px solid var(--line);font-size:23px;line-height:1.35}
+#knobs .kr b{font-weight:900}
+#knobs .kr .now{font:700 22px var(--mono);color:var(--blue)}
+#knobs .kr .nt{color:#3a4560}
+#knobs .tg{display:inline-block;border-radius:999px;padding:3px 12px;font:800 19px var(--sans);text-align:center;border:3px solid var(--ink);white-space:nowrap}
+#knobs .tg.sweep{background:var(--amber)} #knobs .tg.arch{background:var(--blue);color:#fff;border-color:var(--blue)}
+#knobs .tg.tried{background:#e4e0d6;color:#566177;border-color:#c9c2b1} #knobs .tg.idea{background:#fff;border-style:dashed;color:var(--blue);border-color:var(--blue)}
+#knobs .tg.fixed{background:#fff;color:#566177;border-color:#c9c2b1}
+#knobs .x{position:absolute;right:22px;top:16px;font:800 22px var(--mono);color:var(--mute)}
+#tocbtn{position:fixed;right:16px;top:12px;z-index:70;font:800 15px var(--sans);color:var(--ink);background:rgba(255,255,255,.75);border:2px solid var(--line);border-radius:999px;padding:5px 14px;cursor:pointer;opacity:.55;transition:opacity .2s}
+#tocbtn:hover{opacity:1}
+#tocbtn kbd{font:800 13px var(--mono);border:2px solid var(--line);border-radius:5px;padding:0 5px;margin-left:6px}
+#toc{position:absolute;right:56px;top:56px;width:1400px;max-height:968px;overflow:auto;background:#fff;border:4px solid var(--ink);border-radius:20px;
+  box-shadow:14px 14px 0 var(--blue);padding:22px 30px 24px;z-index:65;cursor:auto}
+#toc h3{font-size:36px;font-weight:900;margin:0 0 12px}
+#toc .x{position:absolute;right:22px;top:18px;font:800 22px var(--mono);color:var(--mute)}
+#toc .ls{display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;column-gap:30px}
+#toc .md{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:21px;font-weight:800;color:var(--mute)}
+#toc .md button{font:800 20px var(--sans);border:3px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:4px 16px;cursor:pointer}
+#toc .md button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+#toc .md .gap{width:26px}
+#toc .it{display:grid;grid-template-columns:52px 160px 1fr;gap:10px;align-items:baseline;padding:8px 12px;border-radius:12px;cursor:pointer;font-size:24px;line-height:1.3}
+#toc .it:hover{background:var(--amber2)}
+#toc .it.cur{background:var(--blue);color:#fff} #toc .it.cur .k{color:#dce7ff}
+#toc .it .n{font:800 22px var(--mono);color:var(--mute)} #toc .it.cur .n{color:#fff}
+#toc .it .k{font-size:19px;font-weight:700;color:var(--mute)}
+#toc .it .t{font-weight:800}
+#dots{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:9px}
+#dots b{width:30px;height:7px;border-radius:4px;background:rgba(15,27,51,.18);transition:background .3s,width .3s}
+#dots b.cur{background:var(--blue);width:60px}
+#dots b.past{background:rgba(15,27,51,.5)}
+#pg{position:absolute;right:40px;bottom:6px;font:700 24px var(--mono);color:var(--mute)}
+#steps{position:absolute;right:190px;bottom:9px;display:flex;gap:8px;align-items:center;font:700 22px var(--mono);color:var(--amber)}
+#steps i{width:16px;height:16px;border-radius:50%;border:3px solid var(--amber);background:transparent;display:block}
+#steps i.done{background:var(--ink);border-color:var(--ink)}
+#steps i.nx{animation:nx 1.1s ease-in-out infinite}
+@keyframes nx{0%,100%{transform:scale(1);background:transparent}50%{transform:scale(1.35);background:var(--amber)}}
+#steps span{margin-left:6px}
+.wall{position:absolute;top:0;width:28px;height:1080px;z-index:40;background:repeating-linear-gradient(45deg,var(--ink) 0 18px,var(--amber) 18px 36px);box-shadow:0 0 0 4px var(--ink);display:none}
+.ring{position:absolute;border-radius:50%;border:10px solid var(--blue);z-index:40;display:none;transform:translate(-50%,-50%)}
+.page.on #ping{animation:ping 2s ease-out infinite}
+@keyframes ping{0%{transform:scale(.4);opacity:1}100%{transform:scale(1.6);opacity:0}}
+/* 神經網路：訊號往前傳 */
+.nn .n{fill:#fff;stroke:var(--ink);stroke-width:3}
+.nn .e{stroke:var(--blue);stroke-width:1.6;stroke-opacity:.14}
+.page.on .nn .e{animation:eglow 4.8s ease-in-out infinite;animation-delay:calc(var(--d)*1s)}
+.page.on .nn .n{animation:nglow 4.8s ease-in-out infinite;animation-delay:calc(var(--d)*1s)}
+@keyframes eglow{0%,100%{stroke-opacity:.12;stroke-width:1.6}8%{stroke-opacity:.95;stroke-width:3}30%{stroke-opacity:.14;stroke-width:1.6}}
+@keyframes nglow{0%,100%{fill:#fff}9%{fill:var(--blue)}34%{fill:#fff}}
+.nn .n.o{stroke:var(--red)}
+.page.on .nn .n.o{animation-name:oglow}
+@keyframes oglow{0%,100%{fill:#fff}9%{fill:var(--red)}34%{fill:#fff}}
+.page.on .bounce{animation:bounce 2.2s ease-in-out infinite;animation-delay:calc(var(--i,0)*.35s)}
+@keyframes bounce{0%,100%{transform:translateX(0)}40%{transform:translateX(30px)}50%{transform:translateX(30px)}70%{transform:translateX(-10px)}}
+.hot circle{stroke:var(--red)!important;stroke-width:10!important}
+@media (prefers-reduced-motion:reduce){.page.on .rise,.page.on .pop,.page.on .grow,.page.on .growx{animation:none}}
+</style>
+</head>
+<body>
+<!-- F-16 剪影（俯視、機頭朝右）：路徑由底下的腳本畫 -->
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="jet" viewBox="0 0 100 70"><path id="jetp"/><rect x="17" y="2.6" width="24" height="2.4" rx="1.2" fill="currentColor"/><rect x="17" y="65" width="24" height="2.4" rx="1.2" fill="currentColor"/><ellipse cx="77" cy="35" rx="7.5" ry="2.3" fill="rgba(255,255,255,.55)"/></symbol>
+</defs></svg>
+
+<div id="stage">
+
+<!-- ============ 標題 ============ -->
+<section class="page" id="p-title" data-steps="0">
+  <svg class="fill" viewBox="0 0 1920 1080" id="titlesvg">
+    <circle cx="1390" cy="560" r="330" fill="none" stroke="rgba(15,27,51,.10)" stroke-width="3" stroke-dasharray="4 14"/>
+    <polyline id="tr-r" fill="none" stroke="#e0302b" stroke-opacity=".38" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline id="tr-b" fill="none" stroke="#1553e0" stroke-opacity=".38" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div class="kick rd" style="top:250px"><i></i>F-16 · 1 對 1 機砲纏鬥 · 強化學習</div>
+  <div class="abs rise" style="left:86px;top:300px;font-size:214px;font-weight:900;letter-spacing:-.045em;line-height:1"><span class="b">tail</span><span class="r">gater</span></div>
+  <div class="abs rise" style="--i:2;left:96px;top:560px;font-size:60px;font-weight:800;line-height:1.3">從隨機權重開始，<br>自己打出<span class="b">擊落</span>的 AI</div>
+  <div class="abs rise" style="--i:4;left:96px;top:800px;display:flex;gap:18px;flex-wrap:wrap;width:900px">
+    <span class="chip b">PPO</span><span class="chip">16 384 局同時</span><span class="chip rr">league 對手池</span><span class="chip">15 個 seed 互相陪練</span>
+  </div>
+</section>
+
+<!-- ============ 規則：擊落 ============ -->
+<section class="page" id="p-rules" data-steps="2">
+  <div class="kick"><i></i>比賽規則</div>
+  <h1 class="ttl rise">機頭對準，累積 <span class="b"><span data-v="rules.kill_s"></span> 秒</span>就擊落</h1>
+  <svg class="fill" viewBox="0 0 1920 1080" id="rulessvg"></svg>
+  <div id="p2kill" class="abs num r" style="left:96px;top:590px;font-size:96px;opacity:0;letter-spacing:-.02em">擊落！</div>
+  <div class="abs" style="left:96px;top:720px;width:1000px">
+    <div style="font-size:30px;color:var(--mute)">累積攻擊時間（不用連續）</div>
+    <div style="position:relative;height:56px;margin-top:12px;border:4px solid var(--ink);border-radius:14px;background:#fff;overflow:hidden">
+      <div id="p2bar" style="position:absolute;left:0;top:0;bottom:0;width:0;background:var(--blue)"></div>
+      <div style="position:absolute;left:33.33%;top:0;bottom:0;width:3px;background:var(--ink)"></div>
+      <div style="position:absolute;left:66.66%;top:0;bottom:0;width:3px;background:var(--ink)"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font:700 26px var(--mono);margin-top:6px"><span>0</span><span>1 s</span><span>2 s</span><span class="b">3 s ＝ 擊落</span></div>
+  </div>
+  <div class="abs rise" style="--i:2;left:96px;top:930px"><span class="chip" style="font-size:27px"><span data-v="rules.hz"></span> Hz · 一場 <span data-v="rules.secs"></span> 秒</span></div>
+  <div data-step="1" class="abs" style="left:1150px;top:700px;width:680px;font-size:28px;font-weight:900;color:var(--mute)">一局怎麼結束</div>
+  <div data-step="1" class="card bl" style="left:1150px;top:750px;width:325px;height:112px;padding:12px 20px;box-shadow:7px 7px 0 var(--blue)"><b style="font-size:30px">擊落</b><div style="font-size:24px;line-height:1.3;margin-top:2px">累積 <span data-v="rules.kill_s"></span> 秒 → 直接贏</div></div>
+  <div data-step="1" class="card rd" style="left:1500px;top:750px;width:325px;height:112px;padding:12px 20px;box-shadow:7px 7px 0 var(--red)"><b style="font-size:30px">墜機</b><div style="font-size:24px;line-height:1.3;margin-top:2px">高度 &lt; <span data-v="rules.crash_m"></span> m → 墜機的輸</div></div>
+  <div data-step="1" class="card" style="left:1150px;top:890px;width:325px;height:112px;padding:12px 20px;box-shadow:7px 7px 0 var(--amber)"><b style="font-size:30px">相撞</b><div style="font-size:24px;line-height:1.3;margin-top:2px">距離 &lt; <span data-v="rules.coll_m"></span> m → 比分</div></div>
+  <div data-step="1" class="card" style="left:1500px;top:890px;width:325px;height:112px;padding:12px 20px;box-shadow:7px 7px 0 var(--amber)"><b style="font-size:30px">時間到</b><div style="font-size:24px;line-height:1.3;margin-top:2px"><span data-v="rules.secs"></span> 秒 → 比分</div></div>
+  <div data-step="2" class="card fillk" style="left:470px;top:905px;width:630px;padding:12px 22px;box-shadow:6px 6px 0 var(--blue)"><div style="font-size:23px;line-height:1.45;color:#fff"><b style="color:var(--amber)">比分</b> ＝ 10000 × 攻擊秒數 − 100 × 超過 9 G 的秒數 ＋ 位置分（機頭對著對方、在對方後面）</div></div>
+</section>
+
+<!-- ============ 比分 ============ -->
+<section class="page" id="p-score" data-steps="1">
+  <div class="kick"><i></i>比賽規則</div>
+  <h1 class="ttl rise">時間到：比作戰優勢分 <span class="mth b"><i class="v">S</i><sub>adv</sub></span></h1>
+  <div class="abs rise mth" style="--i:1;left:96px;top:290px;font-size:60px"><i class="v">S</i><sub>adv</sub> ＝</div>
+  <div class="card bl rise" style="--i:2;left:96px;top:390px;width:930px;padding:18px 32px;display:flex;align-items:center;gap:26px">
+    <span class="num b" style="font-size:74px;min-width:230px;text-align:right">＋<span data-v="rules.w_time"></span></span>
+    <span style="font-size:40px;font-weight:800">× 攻擊秒數 <span class="mth m" style="font-size:34px"><i class="v">T</i><sub>att</sub></span></span>
+  </div>
+  <div class="card rd rise" style="--i:3;left:96px;top:555px;width:930px;padding:18px 32px;display:flex;align-items:center;gap:26px">
+    <span class="num r" style="font-size:74px;min-width:230px;text-align:right">－<span data-v="rules.w_g"></span></span>
+    <span style="font-size:40px;font-weight:800">× 超過 <span data-v="rules.g_limit"></span> G 的秒數 <span class="mth m" style="font-size:34px"><i class="v">T</i><sub>G</sub></span></span>
+  </div>
+  <div class="card bl rise" style="--i:4;left:96px;top:720px;width:930px;padding:18px 32px;display:flex;align-items:center;gap:26px">
+    <span class="num b" style="font-size:74px;min-width:230px;text-align:right">＋<span data-v="rules.w_pos"></span></span>
+    <span style="font-size:40px;font-weight:800">× 位置分的累加 <span class="mth m" style="font-size:34px">Σ<i class="v">P</i></span></span>
+  </div>
+  <div class="abs rise" style="--i:5;left:96px;top:895px;width:1000px;font-size:27px;color:var(--mute);line-height:1.5">位置分 <i class="v">P</i>：機頭對著對方、自己在對方後面，每幀累加<span data-deck="full">（下一頁）</span>。<br>擊落另有擊殺分 <b class="num" style="color:var(--ink)" data-v="rules.w_base"></b> ×（1 ＋ 剩餘秒數 / 300）。</div>
+  <div data-step="1" class="abs" style="left:1110px;top:290px;font-size:40px;font-weight:900">位置分要乘<span class="r">距離因子</span></div>
+  <svg class="fill" viewBox="0 0 1920 1080" id="scoresvg"></svg>
+</section>
+
+<!-- ============ 位置分 P(t) ============ -->
+<section class="page" id="p-pos" data-steps="2">
+  <div class="kick"><i></i>比賽規則</div>
+  <h1 class="ttl rise">位置分 <span class="mth b"><i class="v">P</i>(<i class="v">t</i>)</span>：每一幀算一次</h1>
+  <div class="card bl rise" style="--i:1;left:96px;top:270px;width:1728px;padding:22px 36px">
+    <div class="mth" style="font-size:46px;text-align:center"><i class="v">P</i>(<i class="v">t</i>) ＝ （ TA<sub>norm</sub> ＋ AA<sub>norm</sub> ）× 距離因子</div>
+    <div class="mth" style="font-size:34px;margin-top:18px;display:flex;justify-content:center;gap:90px">
+      <span>TA<sub>norm</sub> ＝ <span class="fr"><b>90° − |TA|</b><u>90°</u></span>（TA ≥ 90° 時 ＝ 0）</span>
+      <span>AA<sub>norm</sub> ＝ <span class="fr"><b>90° − |AA|</b><u>90°</u></span>（AA ≥ 90° 時 ＝ 0）</span></div>
+  </div>
+  <div class="card rise" style="--i:2;left:96px;top:545px;width:840px;height:330px;padding:16px 30px">
+    <h3 style="font-size:38px"><span class="b">TA</span>：我的機頭對準了沒</h3>
+    <p style="font-size:27px">我的<b>機頭方向</b>和<b>敵機位置</b>的夾角。機頭正對敵機 ＝ 0°，得 1 分；偏到 90° 以上就 0 分。</p>
+    <h3 style="font-size:38px;margin-top:10px"><span class="r">AA</span>：我在不在它後面</h3>
+    <p style="font-size:27px">我的<b>位置</b>和<b>敵機機尾方向</b>的夾角。正好在它正後方 ＝ 0°，得 1 分。</p>
+  </div>
+  <div data-step="1" class="card rd" style="left:984px;top:545px;width:840px;height:330px;padding:16px 30px">
+    <h3 style="font-size:38px">兩項<span class="r">分開算、再相加</span></h3>
+    <p style="font-size:27px">不用兩個都 &lt; 90° 才有分：機頭對著它（TA 小）但被它咬著（AA 大），還是拿得到 TA 那一半。距離因子見上一頁：150–500 m 乘 1.2 最多。</p>
+  </div>
+  <div data-step="2" class="card fillk" style="left:96px;top:900px;width:1728px;height:120px;padding:14px 34px;display:flex;align-items:center;justify-content:center"><div style="font-size:30px;font-weight:800;text-align:center">最好的情況：在它正後方 300 m、機頭正對它 → （1 ＋ 1）× 1.2 ＝ <b style="color:var(--amber)">2.4 分 / 幀</b><br>一秒 60 幀 → 一秒 144 分；咬住一整場也才約 4.3 萬（＝ 攻擊時間 4.3 秒）</div></div>
+</section>
+
+<!-- ============ 觀測 ============ -->
+<section class="page" id="p-obs" data-steps="3">
+  <div class="kick"><i></i>模型看到什麼</div>
+  <h1 class="ttl rise">看 <span class="b"><span data-v="obs.total"></span> 個數字</span>（每 0.1 秒）</h1>
+  <svg class="fill" viewBox="0 0 1920 1080"><g fill="none" stroke="#0f1b33" stroke-width="5"><path d="M346,395 H430"/><path d="M1432,395 H1510"/></g>
+    <g fill="#0f1b33"><path d="M430,395 l-18,-12 v24z"/><path d="M1510,395 l-18,-12 v24z"/></g></svg>
+  <div class="card rise" style="--i:1;left:96px;top:300px;width:250px;height:190px;padding:20px 24px"><h3 style="font-size:40px">比賽封包</h3><p class="s" style="font-size:25px;margin-top:6px">26 筆<br>每幀 60 Hz</p></div>
+  <div class="abs rise" id="obsbar" style="--i:2;left:430px;top:345px;width:1002px;height:100px;display:flex;border:4px solid var(--ink);border-radius:18px;overflow:hidden;box-shadow:10px 10px 0 var(--ink)">
+    <div class="sg" data-k="1" style="width:19%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font:800 54px var(--mono)"><span data-v="obs.pkt"></span></div>
+    <div class="sg" data-k="5" style="width:58%;background:#5b86ea;color:#fff;display:flex;align-items:center;justify-content:center;font:800 40px var(--mono)">過去 5 幀&nbsp;<span data-v="obs.past"></span></div>
+    <div class="sg" data-k="2" style="width:7%;background:#a31d1a;color:#fff;display:flex;align-items:center;justify-content:center;font:800 30px var(--mono)"><span data-v="obs.last"></span></div>
+    <div class="sg" data-k="4" style="width:16%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font:800 54px var(--mono)"><span data-v="obs.hist"></span></div>
+  </div>
+  <div class="abs rise" style="--i:3;left:430px;top:462px;width:760px;font-size:26px;line-height:1.35"><b class="b">封包算出來的 27 個 × 最近 6 幀</b>：自己的狀態、敵機的相對位置與速度…（現在＋過去 5 幀）</div>
+  <div class="abs rise" style="--i:4;left:1210px;top:462px;width:300px;font-size:26px;line-height:1.35"><b style="color:#a31d1a">上一個動作 <span data-v="obs.last"></span></b><br><b class="r">更早的 4 個動作 <span data-v="obs.hist"></span></b></div>
+  <div class="card rise" style="--i:2;left:1510px;top:300px;width:314px;height:190px;padding:20px 24px;background:var(--blue);color:#fff"><h3 style="font-size:42px">網路</h3><p style="font-size:28px;margin-top:6px">2 × <span data-v="net.hidden"></span> · tanh<br>每 0.1 秒（<span data-v="obs.hz"></span> Hz）</p></div>
+  <div data-step="0" data-until="1" class="abs" style="left:96px;top:640px;font-size:30px;color:var(--mute)">▸ 點一下，看每一段是什麼</div>
+  <div data-step="1" data-until="2" class="card bl" style="left:96px;top:575px;width:1728px;padding:24px 40px;box-shadow:10px 10px 0 var(--blue)">
+    <h3><span class="b">封包算出來的 27 個數</span></h3>
+    <div style="margin-top:14px;display:flex;gap:14px;flex-wrap:wrap;max-width:1650px">
+      <span class="chip b" style="font-size:28px">自己：姿態、高度、速度、角速度…</span><span class="chip b" style="font-size:28px">敵機：相對方向、距離、接近率、速度</span><span class="chip b" style="font-size:28px">比賽：剩餘時間、已累積攻擊秒數</span></div>
+    <div style="margin-top:26px;background:var(--red);color:#fff;border:4px solid var(--ink);border-radius:16px;padding:14px 24px;font-size:29px;line-height:1.45;max-width:1640px"><b>封包裡敵機只有位置和速度，看不到它的姿態</b>（機頭朝哪、滾了多少）。</div>
+  </div>
+  <div data-step="2" data-until="3" class="card bl" style="left:96px;top:575px;width:1728px;padding:24px 40px;box-shadow:10px 10px 0 var(--blue)">
+    <h3>最近 6 幀：這 0.1 秒內發生了什麼</h3>
+    <p style="font-size:31px;max-width:1600px;line-height:1.5;margin-top:10px">模型每 0.1 秒決定一次，封包每 1/60 秒來一筆。把最近 6 幀都放進來，<b class="b">視線怎麼轉、敵機往哪邊轉</b>就看得出來，用來補「看不到姿態」。</p>
+  </div>
+  <div data-step="3" class="card fillb" style="left:96px;top:575px;width:1728px;padding:24px 40px;box-shadow:10px 10px 0 var(--red)">
+    <h3>自己最近 5 個動作</h3>
+    <p style="font-size:31px;max-width:1600px;line-height:1.5;margin-top:10px">上一個動作 ＋ 更早的 4 個（每個 4 個指令）：等於看自己最近 0.5 秒怎麼飛，下一個動作才接得起來。</p>
+  </div>
+</section>
+
+<!-- ============ 神經網路 ============ -->
+<section class="page" id="p-nn" data-steps="3">
+  <div class="kick"><i></i>神經網路</div>
+  <h1 class="ttl rise">LayerNorm ＋ residual，寬 <span class="b" data-v="net.hidden"></span>，tanh</h1>
+  <svg class="fill nn" viewBox="0 0 1920 1080" id="nnsvg"></svg>
+  <div data-step="1" data-until="2" class="card bl" style="left:1330px;top:280px;width:494px;padding:24px 30px;box-shadow:10px 10px 0 var(--blue)">
+    <div style="font-size:34px;font-weight:900;line-height:1.35">網路＝一個很大的函數</div>
+    <p style="font-size:28px;line-height:1.5;margin-top:12px"><b class="b num" data-v="obs.total"></b> 個數字進去 → <b class="b">4 個指令</b>出來（油門、拉幾 G、滾轉多快、方向舵）。</p>
+    <p style="font-size:28px;line-height:1.5;margin-top:12px">裡面有約 <b class="num">229 萬</b>個可以調的數字（參數）；<b>「訓練」就是一直調它們</b>，讓得分變高。</p>
+  </div>
+  <div data-step="2" data-until="3" class="card rd" style="left:1330px;top:250px;width:494px;height:520px;padding:22px 28px;box-shadow:10px 10px 0 var(--red)">
+    <h3 style="font-size:40px"><span class="r">V</span>：狀態價值</h3>
+    <p style="font-size:30px;line-height:1.55;margin-top:12px">critic 輸出的一個數字：<b>從現在這個局面開始、照目前的打法，預期之後總共還能拿幾分。</b></p>
+    <p style="font-size:28px;line-height:1.5;margin-top:20px">PPO 拿 V 當<b>基準</b>：某個動作實際拿到的分，比 V 高就是「比預期好」，低就是「比預期差」。</p>
+  </div>
+  <div data-step="3" class="card" style="left:1330px;top:250px;width:494px;padding:22px 28px;box-shadow:10px 10px 0 var(--amber)">
+    <h3 style="font-size:34px">兩個小零件</h3>
+    <p style="font-size:24px;line-height:1.5;margin-top:12px"><b>LayerNorm</b>：同一筆資料的 1024 個數字減平均、除標準差，進 tanh 的數字不會太大（太大 tanh 就變平、學不動）。</p>
+    <p style="font-size:24px;line-height:1.5;margin-top:12px"><b class="b">residual</b>：橘色那層算「修正量 f」，原本的 u 直接跳過去加回來（u ＋ f）；沒用的話學成 0 就好 → 加深不容易變差。</p>
+    <p style="font-size:22px;line-height:1.45;margin-top:12px;color:var(--mute)">參考 SimBa（ICLR 2025）：RL 網路要加大，配這兩樣才穩。</p>
+  </div>
+  <div class="abs rise m" style="--i:5;left:96px;top:1000px;font-size:25px">actor、critic 各一個網路（不共用參數），共用一個觀測正規化；比賽時用平均值 <i class="v">μ</i>（不抽樣）</div>
+</section>
+
+<!-- ============ 飛控 ============ -->
+<section class="page" id="p-ctrl" data-steps="4">
+  <div class="kick"><i></i>飛控</div>
+  <h1 class="ttl rise">網路只說「想怎麼飛」</h1>
+  <div class="card bl rise" style="--i:1;left:96px;top:270px;width:1050px;height:640px;padding:20px 24px">
+    <div data-step="0" data-until="3" style="position:absolute;left:24px;right:24px;top:20px">
+    <div style="font-size:27px;font-weight:800">拉 G：目標與實際<span class="m" style="font-weight:500">（示意）</span></div>
+    <svg id="ctrlsvg" viewBox="0 0 1000 560" style="width:100%;margin-top:4px"></svg></div>
+    <div data-step="3" style="position:absolute;left:24px;right:24px;top:20px">
+      <div style="font-size:27px;font-weight:800">兩個時鐘：大腦 <span class="num b" data-v="obs.hz"></span> Hz、小腦 <span class="num r" data-v="obs.fc_hz"></span> Hz</div>
+      <svg id="clocksvg" viewBox="0 0 1000 330" style="width:100%;margin-top:2px"></svg>
+      <div style="font-size:24px;line-height:1.5;margin-top:4px"><b>為什麼大腦慢一點：</b><br>① 一局 <span data-v="rules.secs"></span> 秒＝<b>3000</b> 次決策（不是 18000 次），「哪個動作造成後來的得分」比較好學<br>② 網路算的次數少 6 倍，訓練比較快<br>③ 需要很快反應的「穩住飛機」交給 PI 飛控。<span data-deck="full"></span></div>
+    </div>
+  </div>
+  <div class="card rd rise" style="--i:2;left:1200px;top:270px;width:624px;padding:20px 28px;box-shadow:10px 10px 0 var(--red)">
+    <div style="font-size:26px;color:var(--mute);font-weight:700">網路每 0.1 秒說一句</div>
+    <div style="font-size:36px;font-weight:900;line-height:1.35;margin-top:4px">「我要拉 <span class="num r">5</span> G，<br>每秒滾 <span class="num r">90</span>°」</div>
+    <div style="font-size:23px;color:var(--mute);margin-top:6px;line-height:1.4">油門直接用；方向舵也直接當舵面送出（不經 PI）</div>
+  </div>
+  <div data-step="1" class="card" style="left:1200px;top:490px;width:624px;padding:18px 28px">
+    <div style="font-size:31px;font-weight:900;line-height:1.4">PI 飛控每 1/<span data-v="obs.fc_hz"></span> 秒量一次：<br><span class="b">實際</span>和<span style="color:#7a8aa8">目標</span>差多少？</div>
+    <div style="font-size:26px;color:var(--mute);margin-top:6px;line-height:1.4">把差距補上，舵面自動調。</div>
+  </div>
+  <div data-step="2" class="card" style="left:1200px;top:665px;width:624px;padding:16px 28px;box-shadow:10px 10px 0 var(--amber)">
+    <div style="font-size:27px;line-height:1.5"><b class="b">P（比例）</b>：看<b>現在</b>差多少，差越多、舵面推越多。<br><b style="color:#b27a00">I（積分）</b>：看<b>累積</b>差了多少，一直差一點就慢慢加量，直到補上。</div>
+    <div style="font:700 22px var(--mono);color:var(--mute);margin-top:6px;line-height:1.5">俯仰　P <span data-v="ctl.kp_g"></span>　I <span data-v="ctl.ki_g"></span><br>滾轉　P <span data-v="ctl.kp_p"></span>　I <span data-v="ctl.ki_p"></span></div>
+  </div>
+  <div data-step="4" class="card fillk" style="left:96px;top:950px;width:1728px;height:84px;padding:6px 34px;display:flex;align-items:center;justify-content:center;gap:30px;box-shadow:8px 8px 0 var(--blue)">
+    <div style="font-size:33px;font-weight:800;text-align:center">網路只要決定<b style="color:var(--amber)">「想怎麼飛」</b>，不用學<b style="color:var(--amber)">「怎麼操作舵面才飛得穩」</b></div>
+  </div>
+</section>
+
+<!-- ============ PPO：打、得分、更新 ============ -->
+<section class="page" id="p-loop" data-steps="3">
+  <div class="kick"><i></i>怎麼學：PPO</div>
+  <h1 class="ttl rise">從亂飛開始，靠<span class="b">得分</span>試錯</h1>
+  <svg class="fill" viewBox="0 0 1920 1080" id="loopsvg">
+    <path id="loopPath" d="M620,360 A330,330 0 0 1 906,780 A330,330 0 0 1 334,780 A330,330 0 0 1 620,360" fill="none" stroke="#0f1b33" stroke-width="6" stroke-dasharray="2 16" stroke-linecap="round"/>
+    <g id="nd1"><circle cx="620" cy="360" r="108" fill="#1553e0" stroke="#0f1b33" stroke-width="5"/><text x="620" y="392" text-anchor="middle" font-size="94" font-weight="900" fill="#fff">打</text></g>
+    <g id="nd2"><circle cx="906" cy="780" r="108" fill="#f2a900" stroke="#0f1b33" stroke-width="5"/><text x="906" y="812" text-anchor="middle" font-size="76" font-weight="900" fill="#0f1b33">得分</text></g>
+    <g id="nd3"><circle cx="334" cy="780" r="108" fill="#0f1b33" stroke="#0f1b33" stroke-width="5"/><text x="334" y="812" text-anchor="middle" font-size="76" font-weight="900" fill="#fff">更新</text></g>
+    <circle id="tok" r="19" fill="#e0302b" stroke="#fff" stroke-width="5"/>
+    <text x="620" y="590" text-anchor="middle" font-size="32" fill="#566177" font-weight="700">打了就有分數，</text>
+    <text x="620" y="634" text-anchor="middle" font-size="32" fill="#566177" font-weight="700">分數拿去改網路</text>
+  </svg>
+  <div class="card bl rise" id="g0" style="--i:2;left:1130px;top:270px;width:694px;padding:20px 30px;box-shadow:8px 8px 0 var(--blue)"><div style="font-size:31px;line-height:1.45">一開始網路什麼都不會，動作是亂的。<b>打很多局，看得多少分</b>，再讓得分高的做法變多。</div></div>
+  <div data-step="1" class="card" id="g1" style="left:1130px;top:430px;width:694px;padding:16px 30px;box-shadow:8px 8px 0 var(--blue)"><div style="font-size:30px;line-height:1.4"><b class="b">打</b>：用 policy（策略）打。policy 就是那個網路：<b>看觀測 → 輸出動作</b>。</div></div>
+  <div data-step="2" class="card" id="g2" style="left:1130px;top:600px;width:694px;padding:16px 30px;box-shadow:8px 8px 0 var(--amber)"><div style="font-size:30px;line-height:1.4"><b style="color:#b27a00">得分</b>：reward，每一「步」給一次分數。一步 ＝ <b class="num">0.1</b> 秒（網路出一次手）。</div></div>
+  <div data-step="3" class="card fillk" id="g3" style="left:1130px;top:770px;width:694px;padding:16px 30px"><div style="font-size:29px;line-height:1.45"><b>更新</b>：得分高的動作「變得更常做」，低的變少。<br>每次只小改一點——改太多會崩，所以有個剎車：改動量超過上限就停。</div></div>
+</section>
+
+<!-- ============ reward ============ -->
+<section class="page" id="p-reward" data-steps="1">
+  <div class="kick"><i></i>分數（reward）</div>
+  <h1 class="ttl rise">分數告訴模型<span class="b">什麼是好</span></h1>
+  <div id="rw"></div>
+  <div data-step="1" class="card bl" style="left:96px;top:845px;width:1080px;height:195px;padding:10px 24px;box-shadow:8px 8px 0 var(--blue)">
+    <div style="font-size:30px;font-weight:900">一場加起來</div>
+    <div style="font-size:26px;line-height:1.5;margin-top:4px">擊落贏 ≈ <b class="b">＋22</b>（終局 15 ＋ 攻擊 6 ＋ 比分 1 ＋ 姿態）　時間到贏 ≈ <b class="b">＋11</b>　被擊落 ≈ <b class="r">−22</b><br>→ 擊落比時間到贏多一倍：模型有理由去<b>收尾</b>，不只是咬住到時間結束。</div>
+  </div>
+</section>
+
+<!-- ============ PPO 細節：怎麼判斷好壞 ============ -->
+<section class="page" id="p-adv" data-steps="3">
+  <div class="kick"><i></i>怎麼學：PPO</div>
+  <h1 class="ttl rise">怎麼判斷一個動作<span class="b">好不好</span></h1>
+  <div class="card bl rise" style="--i:1;left:96px;top:270px;width:840px;height:330px;padding:20px 28px">
+    <h3 style="font-size:40px"><span class="b">critic</span>：估「還能拿幾分」</h3>
+    <p style="font-size:27px;line-height:1.42">另一個網路，輸出 <b class="r">V</b>：從這個局面開始、照目前的打法，<b>預期之後總共還能拿幾分</b>（一個數字）。</p>
+    <svg viewBox="0 0 780 90" style="width:100%;margin-top:6px"><rect x="0" y="20" width="460" height="46" rx="10" fill="#c9d0dd" stroke="#0f1b33" stroke-width="3"/><text x="14" y="52" font-size="26" font-weight="800">預期 ＝ V</text></svg>
+  </div>
+  <div data-step="1" class="card" id="advcard" style="left:984px;top:270px;width:840px;height:330px;padding:20px 28px;box-shadow:10px 10px 0 var(--blue)">
+    <h3 style="font-size:40px">比預期好或差</h3>
+    <svg viewBox="0 0 780 204" style="width:100%;margin-top:2px">
+      <rect x="0" y="6" width="330" height="40" rx="9" fill="#c9d0dd" stroke="#0f1b33" stroke-width="3"/><text x="10" y="34" font-size="23" font-weight="700">預期</text>
+      <rect x="0" y="52" width="500" height="40" rx="9" fill="#1553e0" stroke="#0f1b33" stroke-width="3"/><text x="10" y="80" font-size="23" font-weight="700" fill="#fff">實際（多拿）→ 這個動作變更常做</text>
+      <rect x="0" y="108" width="330" height="40" rx="9" fill="#c9d0dd" stroke="#0f1b33" stroke-width="3"/><text x="10" y="136" font-size="23" font-weight="700">預期</text>
+      <rect x="0" y="154" width="170" height="40" rx="9" fill="#e0302b" stroke="#0f1b33" stroke-width="3"/><text x="180" y="182" font-size="23" font-weight="700" fill="#e0302b">少拿 → 變少</text>
+    </svg>
+  </div>
+  <div data-step="2" class="card rd" style="left:96px;top:650px;width:840px;height:350px;padding:20px 28px;box-shadow:10px 10px 0 var(--red)">
+    <h3 style="font-size:40px"><i class="v">γ</i> ＝ <span class="num" data-v="ppo.gamma"></span>：看多遠</h3>
+    <p style="font-size:27px;line-height:1.4">越遠的未來，分數打越多折。大約看未來 <b class="num">20</b> 秒（一步 0.1 秒）：<span class="mth"><span class="fr"><b>1</b><u>1 − <i class="v">γ</i></u></span> ＝ 200 步</span></p>
+    <svg viewBox="0 0 780 130" style="width:100%;margin-top:4px"><path id="gampath" fill="none" stroke="#e0302b" stroke-width="5"/><line x1="10" y1="100" x2="770" y2="100" stroke="#0f1b33" stroke-width="3"/><line x1="390" y1="30" x2="390" y2="108" stroke="#0f1b33" stroke-width="2" stroke-dasharray="6 6"/><text x="390" y="126" text-anchor="middle" font-size="21" fill="#566177" font-weight="700">20 秒</text><text x="120" y="22" font-size="21" fill="#566177" font-weight="700">權重（越來越小）</text></svg>
+  </div>
+  <div data-step="3" class="card fillk" style="left:984px;top:650px;width:840px;height:350px;padding:20px 28px">
+    <h3 style="font-size:40px">一次更新用的資料</h3>
+    <p style="font-size:29px;line-height:1.45"><span class="num" data-v="ppo.envs"></span> 局 × <span class="num" data-v="ppo.steps"></span> 步 ＝ <b class="num" style="color:var(--amber)" data-v="ppo.batch"></b> 筆經驗。<br>同一批看 <b data-v="ppo.epochs"></b> 遍，每遍切成 <b data-v="ppo.mb"></b> 份小批。</p>
+    <p class="s" style="font-size:25px;margin-top:8px">learning rate <span class="mth">3×10<sup>−4</sup></span>　·　KL 超過 <span data-v="ppo.kl"></span> 就提早結束這一輪</p>
+    <svg viewBox="0 0 780 84" style="width:100%;margin-top:4px" id="batchsvg"></svg>
+  </div>
+</section>
+
+<!-- ============ 開局（比賽怎麼開始）：放在課程之前 ============ -->
+<section class="page" id="p-open" data-steps="1">
+  <div class="kick"><i></i>開局</div>
+  <h1 class="ttl rise">一局從哪裡開始</h1>
+  <div id="openCards"></div>
+  <div data-step="1" class="card fillk" style="left:96px;top:880px;width:1728px;height:120px;padding:14px 34px;display:flex;align-items:center;gap:50px">
+    <div style="font-size:30px;white-space:nowrap"><b>每一種都一樣</b></div>
+    <div style="font-size:27px;line-height:1.45">兩機直線距離 <span class="num" style="color:var(--amber)" data-v="open.dist"></span> 呎（約 0.9 / 1.8 / 2.7 km）隨機挑一個；被追、追人＝前後相隔這麼遠<br>高度 <span class="num" style="color:var(--amber)" data-v="open.alt"></span> 呎，兩機同高　·　速度 <span class="num" style="color:var(--amber)" data-v="open.kts"></span> 節</div>
+  </div>
+</section>
+
+<!-- ============ 課程 ============ -->
+<section class="page" id="p-cur" data-steps="3">
+  <div class="kick"><i></i>課程</div>
+  <h1 class="ttl rise">先簡單、再變難，<span class="b">自己收掉</span></h1>
+  <div class="card rise" id="cc1" style="--i:1;left:96px;top:280px;width:540px;height:580px;padding:20px 26px;box-shadow:10px 10px 0 var(--blue)">
+    <h3>開局課程</h3>
+    <svg viewBox="0 0 484 250" style="width:100%;margin-top:4px" id="c1svg"></svg>
+    <div class="num" style="font-size:32px;margin-top:2px">難度 <i class="v">g</i> ＝ <span id="c1v" class="b">0.00</span></div>
+    <div style="font-size:24px;color:var(--mute);margin-top:2px">近距離追擊開局佔 <span id="c1p" class="b" style="font-weight:800">80%</span></div>
+    <div data-step="1" style="font-size:23px;line-height:1.42;margin-top:8px;padding-top:8px;border-top:3px solid var(--line)">先讓開局變簡單（近距離追在敵機後面），打得到就慢慢換回正常開局。</div>
+  </div>
+  <div class="card rise" id="cc2" style="--i:2;left:690px;top:280px;width:540px;height:580px;padding:20px 26px;box-shadow:10px 10px 0 var(--blue)">
+    <h3>射擊錐課程</h3>
+    <svg viewBox="0 0 484 250" style="width:100%;margin-top:4px" id="c2svg"></svg>
+    <div class="num" style="font-size:32px;margin-top:2px">我方的錐 ＝ <span id="c2v" class="b">5.0°</span></div>
+    <div style="font-size:24px;color:var(--mute);margin-top:2px">對手一直是 1°</div>
+    <div data-step="2" style="font-size:23px;line-height:1.42;margin-top:8px;padding-top:8px;border-top:3px solid var(--line)">先用比較寬的錐算攻擊時間，擊落變多就慢慢收窄，最後跟正式規則一樣。</div>
+  </div>
+  <div class="card rise" id="cc3" style="--i:3;left:1284px;top:280px;width:540px;height:580px;padding:20px 26px;box-shadow:10px 10px 0 var(--blue)">
+    <h3>warm up</h3>
+    <svg viewBox="0 0 484 250" style="width:100%;margin-top:4px" id="c3svg"></svg>
+    <div class="num" style="font-size:32px;margin-top:2px">簡單對手勝率 <span id="c3v" class="b">.20</span></div>
+    <div style="font-size:24px;color:var(--mute);margin-top:2px">只有 main</div>
+    <div data-step="3" style="font-size:23px;line-height:1.42;margin-top:8px;padding-top:8px;border-top:3px solid var(--line)">先多打不會反擊的靶機，打贏了就慢慢換成正式的對手池。</div>
+  </div>
+  <div class="abs rise" style="--i:1;left:96px;top:222px;font-size:27px;font-weight:800">三個<span class="b">各自獨立</span>：各看各的成績、各自收掉（<i class="v">g</i> 只屬於開局課程）</div>
+  <div class="abs rise m" style="--i:6;right:96px;top:232px;font-size:23px">動畫是設定值的示意</div>
+</section>
+
+<!-- ============ GPU ============ -->
+<section class="page" id="p-gpu" data-steps="0">
+  <div class="kick"><i></i>規模</div>
+  <h1 class="ttl rise" style="font-size:74px;width:430px;top:100px">一張顯卡，同時打<br><span class="b num" data-v="ppo.envs" style="letter-spacing:-.03em"></span> 場</h1>
+  <canvas id="gridc" width="1792" height="1792" class="abs" style="left:512px;top:92px;width:896px;height:896px;background:#fff;border:4px solid var(--ink);box-shadow:10px 10px 0 var(--blue)"></canvas>
+  <div class="abs" id="ping" style="left:960px;top:540px;width:84px;height:84px;margin:-42px 0 0 -42px;border:5px solid var(--ink);border-radius:50%"></div>
+  <svg class="abs" id="heroCell" style="left:946px;top:531.25px;width:28px;height:17.5px;overflow:visible" viewBox="0 0 640 400"></svg>
+  <div class="abs rise" style="--i:6;left:1010px;top:470px;font-size:27px;font-weight:800;background:var(--bg);padding:2px 10px;border-radius:8px">↙ 這一格＝一場</div>
+  <div class="abs rise" style="--i:3;left:96px;top:500px;font-size:30px;line-height:1.6"><svg viewBox="0 0 100 70" style="width:76px;height:53px;vertical-align:middle;color:var(--blue)"><use href="#jet"/></svg> 我方　<svg viewBox="0 0 100 70" style="width:76px;height:53px;vertical-align:middle;color:var(--red)"><use href="#jet"/></svg> 對手<br><span class="m" style="font-size:26px">每一格＝一場 1 對 1<br>128 × 128 ＝ 16 384</span></div>
+  <div class="card rise" style="--i:4;left:96px;top:700px;width:380px;padding:18px 24px;box-shadow:8px 8px 0 var(--amber)"><p style="margin:0;font-size:28px;line-height:1.45">一次練 <b>15</b> 個 seed<br>→ 一張顯卡同時<br>約 <b style="color:var(--blue);font-size:34px">24 萬</b> 場</p></div>
+  <div class="card rise" style="--i:2;left:1470px;top:330px;width:360px;padding:20px 26px;box-shadow:8px 8px 0 var(--red)"><p style="margin:0;font-size:28px;line-height:1.45">飛行物理 JSBSim 原本只能在 <b>CPU</b> 上<b>一場一場</b>跑。</p></div>
+  <div class="card fillk rise" style="--i:3;left:1470px;top:560px;width:360px;padding:20px 26px"><p style="margin:0;font-size:28px;line-height:1.45">我們自己做了 <b>GPU 版</b>的訓練環境：一張顯卡<b style="color:var(--amber)">同時跑上萬場</b>。</p></div>
+  <!-- 第 1 步：速度賽跑（蓋在網格上）；第 2 步收起來，回到網格 → 下一頁從中間那格放大的轉場不受影響 -->
+  <div class="card" id="srCard" data-step="1" data-until="2" style="display:none;left:96px;top:112px;width:1728px;height:880px;padding:32px 56px;z-index:5;box-shadow:14px 14px 0 var(--blue)">
+    <div style="font-size:44px;font-weight:900;line-height:1.2">以前 vs 現在：同時跑，看誰先練完</div>
+    <div class="m" style="font-size:24px;font-weight:700;margin-top:6px;width:1300px;line-height:1.4">每架飛機＝一條 run（一組設定從頭練一次）；跑道長度＝步數，虛線＝那時候一條 run 練到幾步就停<br>（一步＝模型做一次決定，0.1 秒）</div>
+    <div class="abs" style="right:56px;top:30px;text-align:right"><div class="m" style="font-size:22px;font-weight:800;letter-spacing:.1em">經過</div><div id="srClock" style="font:900 60px var(--mono);line-height:1">0 小時</div></div>
+    <svg class="abs" id="srSvg" style="left:56px;top:175px;width:1616px;height:580px;overflow:visible" viewBox="0 0 1616 580"></svg>
+    <div class="abs" id="srBanner" style="left:56px;top:770px;width:1616px;font-size:30px;font-weight:900;opacity:0">一條 10 億步：GPU <span class="b">約 15 小時</span>、CPU <span class="r">7.7 天</span>；整輪 15 條 CPU 要約 <span class="r">19 天</span> → 約快 <span class="r">30 倍</span>（網路還大 16 倍）</div>
+    <div class="abs m" style="left:56px;top:822px;font-size:19px;font-weight:600">CPU：9 月 CPU 版實測（猛男一號，6 條 run 合計每秒約 9 千步，一條通常練 1,200–3,000 萬步）；GPU：10/16 實測（疊 6 幀、bf16：15 條 run 同時練到 10 億步，15.0 小時）</div>
+  </div>
+</section>
+
+
+
+
+<!-- ============ 學習率：先固定，最後慢慢收 ============ -->
+<section class="page" id="p-lr" data-steps="1">
+  <div class="kick"><i></i>練多久</div>
+  <h1 class="ttl rise">學習率：先固定、慢慢收，<span class="b">再收兩次</span></h1>
+  <svg class="abs" id="lrsvg" style="left:96px;top:250px;width:1050px;height:760px;overflow:visible" viewBox="0 0 1050 760"></svg>
+  <div class="card rise" style="--i:3;left:1200px;top:270px;width:624px;padding:22px 28px;box-shadow:8px 8px 0 var(--blue)">
+    <h3 style="font-size:32px">學習率＝每次更新走多大步</h3>
+    <p style="font-size:25px;line-height:1.45;margin-top:8px">前 6 億步固定 <b class="num">3×10<sup>−4</sup></b>：大步探索。<br>6 → 10 億步直線降到 0：步子越走越小，收在一個穩的地方。<br>15 個 seed 一起練，一張顯卡約 15 小時。</p>
+  </div>
+  <div data-step="1" class="card fillk" style="left:1200px;top:640px;width:624px;padding:22px 28px">
+    <h3 style="font-size:32px;color:#fff">平均之後，再練 2 億步 × 2</h3>
+    <p style="font-size:25px;line-height:1.45;margin-top:8px;color:#fff">每一段從 <b>1×10<sup>−4</sup></b>（原本的 1/3）直線降到 0。<br>為什麼要「平均」：下一頁。比賽用 14 億步那個。</p>
+  </div>
+</section>
+<!-- ===================== 權重平均再練 ===================== -->
+<section class="page" id="p-soup" data-steps="2">
+  <div class="kick"><i></i>最後一步</div>
+  <h1 class="ttl rise">權重平均：<span class="b">同一個祖先</span>才平均得起來</h1>
+  <svg class="fill" viewBox="0 0 1920 1080" id="soupsvg"></svg>
+  <div data-step="1" class="card bl" style="left:96px;top:760px;width:820px;padding:20px 28px">
+    <h3 style="font-size:30px">為什麼可以直接平均權重</h3>
+    <p style="font-size:23px;line-height:1.45;margin-top:6px">都從同一個祖先分出去、只多練一小段：還在同一個「山谷」裡，平均＝山谷中間，各自的怪習慣互相抵消。<br><span style="color:var(--red3);font-weight:800">不同祖先的模型平均起來會直接壞掉。</span></p>
+  </div>
+  <div data-step="2" class="card rd" style="left:1000px;top:760px;width:824px;padding:20px 28px">
+    <h3 style="font-size:30px">為什麼還要再練</h3>
+    <p style="font-size:23px;line-height:1.45;margin-top:6px">只平均：分數持平，但打法變保守。<br>平均之後用小學習率再練一段，把平均失去的找回來；再平均、再練一次。</p>
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<!-- ===================== exploiter 交替（1103 補） ===================== -->
+<section class="page" id="p-xloop" data-steps="1">
+  <div class="kick rd"><i></i>補弱點</div>
+  <h1 class="ttl rise">exploiter 交替：<span class="r">補了弱點，也付了代價</span></h1>
+  <div class="rise" style="--i:1;border:3px solid var(--ink);background:#fff;border-radius:14px;padding:18px 20px;position:absolute;top:260px;height:220px;width:360px;left:96px;box-shadow:8px 8px 0 var(--blue)">
+    <h3 style="font-size:30px">① 主模型</h3>
+    <p style="font-size:26px;line-height:1.5;margin-top:10px">平均再練出來的最強模型。</p>
+  </div>
+  <div class="rise" style="--i:2;position:absolute;left:470px;top:330px;font-size:60px;font-weight:900">→</div>
+  <div class="rise" style="--i:2;border:3px solid var(--ink);background:#fff;border-radius:14px;padding:18px 20px;position:absolute;top:260px;height:220px;width:360px;left:530px">
+    <h3 style="font-size:30px">② 練 exploiter</h3>
+    <p style="font-size:26px;line-height:1.5;margin-top:10px">從零練一個<b>專打主模型</b>的對手，找出它的弱點。</p>
+  </div>
+  <div class="rise" style="--i:3;position:absolute;left:904px;top:330px;font-size:60px;font-weight:900">→</div>
+  <div class="rise" style="--i:3;border:3px solid var(--ink);background:#fff;border-radius:14px;padding:18px 20px;position:absolute;top:260px;height:220px;width:360px;left:964px">
+    <h3 style="font-size:30px">③ 放進對手池</h3>
+    <p style="font-size:26px;line-height:1.5;margin-top:10px">主模型帶著它再練，把弱點補起來。</p>
+  </div>
+  <div class="rise" style="--i:4;position:absolute;left:1338px;top:330px;font-size:60px;font-weight:900">→</div>
+  <div class="rise" style="--i:4;border:3px solid var(--ink);background:#fff;border-radius:14px;padding:18px 20px;position:absolute;top:260px;height:220px;width:426px;left:1398px;box-shadow:8px 8px 0 var(--red)">
+    <h3 style="font-size:30px">④ 重複</h3>
+    <p style="font-size:26px;line-height:1.5;margin-top:10px">再練新的 exploiter 打補好的模型……新的越來越難打穿，就停。</p>
+  </div>
+  <div data-step="1" class="card fillk" style="left:96px;top:560px;width:1728px;padding:24px 36px">
+    <h3 style="font-size:32px;color:#fff">代價：打自己人變強，打外部變差</h3>
+    <p style="font-size:27px;line-height:1.5;margin-top:8px;color:#fff">exploiter 是針對自己的弱點，補完之後打我們自己這類模型很強，但打別人練出來的模型反而變差，兩邊之間有取捨。</p>
+  </div>
+</section>
+<!-- ============ 考官從哪來：韓國比賽 ============ -->
+<section class="page" id="p-korea" data-steps="0">
+  <div class="kick rd"><i></i>考官從哪來</div>
+  <h1 class="ttl rise" style="font-size:76px">韓國 <span class="r">AI Pilot Top Gun Challenge</span></h1>
+  <div class="card rise" style="--i:1;left:96px;top:250px;width:520px;height:740px;padding:22px 28px;box-shadow:8px 8px 0 var(--ink)">
+    <h3 style="font-size:34px">比賽</h3>
+    <p style="font-size:24px;line-height:1.5;margin-top:8px">2026 年，韓國航空大學主辦；約 290 隊報名、16 隊進決賽。</p>
+    <p style="font-size:24px;line-height:1.5;margin-top:10px">一樣是 <b>F-16 1 對 1 機砲纏鬥</b>、一樣用 JSBSim。</p>
+    <p style="font-size:24px;line-height:1.5;margin-top:10px">不一樣的地方：伺服器會給<b>敵機的姿態、角速度</b>（神盾盃只給位置和速度）。</p>
+    <p style="font-size:24px;line-height:1.5;margin-top:10px">冠軍隊「추락도락이다」（5 人）賽後公開了程式和幾個模型。</p>
+  </div>
+  <div class="card rd rise" style="--i:2;left:652px;top:250px;width:600px;height:740px;padding:22px 28px;box-shadow:8px 8px 0 var(--red)">
+    <h3 style="font-size:34px" class="r">冠軍隊怎麼練</h3>
+    <div style="font-size:22px;line-height:1.5;margin-top:8px">
+      <p>· PPO；自己把 JSBSim 搬到 GPU，4096 場同時跑</p>
+      <p>· 網路：多層感知器（試過幾種大小，3 層 × 384 最好）</p>
+      <p>· 動作：4 個舵面各分 21 格（離散）；每 0.1 秒決定一次</p>
+      <p>· critic 多看「對手最近的動作」；多一個小頭預測對手之後的位置</p>
+      <p>· 12 種專門找弱點的對手（exploiter）：4 種 reward × 3 種起點，其中一種專門「讓對手掉高度、墜機」</p>
+      <p>· 對手池：所有版本都留著，照互打的勝率表算出抽誰</p>
+    </div>
+  </div>
+  <div class="card bl rise" style="--i:3;left:1288px;top:250px;width:536px;height:740px;padding:22px 28px;box-shadow:8px 8px 0 var(--blue)">
+    <h3 style="font-size:34px" class="b">公開的模型 → 我們的考官</h3>
+    <div style="font-size:22px;line-height:1.45;margin-top:10px">
+      <p><b class="mono" style="font-size:26px">jf</b>　junhwa_final：公開的模型（2 × 768）</p>
+      <p style="margin-top:8px"><b class="mono" style="font-size:26px">jx</b>　他們的 exploiter（survive）：最難打</p>
+      <p style="margin-top:8px"><b class="mono" style="font-size:26px">jw</b>　wide1_v2：一層 4096</p>
+      <p style="margin-top:8px"><b class="mono" style="font-size:26px">g69</b>、<b class="mono" style="font-size:26px">g20</b>　gylee：同一個 repo，3 × 384，分別練到 69 000、20 000 輪</p>
+    </div>
+    <p style="font-size:21px;line-height:1.45;margin-top:16px;color:var(--mute)">決賽交的不是這幾顆。</p>
+    <div style="margin-top:14px;background:var(--ink);color:#fff;border-radius:12px;padding:12px 16px;font-size:22px;font-weight:800;line-height:1.4">這些只當考官，永遠不進訓練。</div>
+  </div>
+</section>
+
+<!-- ============ 考試面板 ============ -->
+<section class="page" id="p-exam" data-steps="0">
+  <div class="kick"><i></i>考試面板</div>
+  <h1 class="ttl rise">考官<span class="r">永遠不進</span>訓練</h1>
+  <div class="card bl rise" style="--i:1;left:96px;top:300px;width:520px;height:590px;padding:22px 28px">
+    <h3 class="b">訓練</h3>
+    <div style="display:flex;flex-direction:column;gap:30px;margin-top:26px">
+      <span class="chip b" style="font-size:30px">固定對手</span><span class="chip b" style="font-size:30px">自己、舊版</span><span class="chip b" style="font-size:30px">其他 seed</span></div>
+  </div>
+  <div class="abs bounce" style="--i:0;left:640px;top:450px;font:900 64px var(--mono);color:var(--blue)">→</div><div class="abs bounce" style="--i:1;left:640px;top:600px;font:900 64px var(--mono);color:var(--blue)">→</div>
+  <div class="abs rise" style="--i:2;left:690px;top:300px;width:44px;height:610px;background:repeating-linear-gradient(45deg,var(--ink) 0 20px,var(--amber) 20px 40px);border:4px solid var(--ink);border-radius:8px"></div>
+  <div class="abs rise" style="--i:3;left:690px;top:925px;width:44px;white-space:nowrap;font-size:26px;font-weight:800"><span style="position:absolute;left:-26px">不跨過去</span></div>
+  <div id="exam"></div>
+  <div class="abs rise" style="--i:9;left:810px;top:925px;font-size:28px;color:var(--mute)">考官永遠不進訓練</div>
+</section>
+
+
+<!-- ===================== TJ 45 分鐘版（1106）：新頁 ===================== -->
+<section class="page" id="p-tj-explore" data-steps="1">
+  <div class="kick"><i></i>怎麼學：探索</div>
+  <h1 class="ttl rise">訓練時<span class="b">試</span>，比賽時<span class="r">穩</span></h1>
+  <div class="card bl rise" style="--i:1;left:96px;top:280px;width:840px;height:600px;padding:26px 34px">
+    <h3 class="b">訓練：從分布裡抽</h3>
+    <p>網路其實輸出兩個東西：<b>平均</b>（最想做的動作）和<b>寬度</b>（有多不確定）。</p>
+    <p>每一步從這個分布裡<b class="b">抽一個</b>來飛，所以會試到沒做過的動作；試出更高分的，下次就更常做。</p>
+    <svg viewBox="0 0 760 210" style="width:760px;height:210px;margin-top:6px;overflow:visible">
+      <path d="M20,190 C200,190 260,30 380,30 C500,30 560,190 740,190" fill="rgba(21,83,224,.12)" stroke="var(--blue)" stroke-width="5"/>
+      <line x1="380" y1="20" x2="380" y2="192" stroke="var(--ink)" stroke-width="4" stroke-dasharray="8 8"/>
+      <line x1="10" y1="192" x2="750" y2="192" stroke="var(--ink)" stroke-width="4"/>
+      <g fill="var(--red)" stroke="var(--ink)" stroke-width="3"><circle cx="300" cy="192" r="11"/><circle cx="430" cy="192" r="11"/><circle cx="520" cy="192" r="11"/><circle cx="352" cy="192" r="11"/></g>
+      <text x="392" y="14" font-size="24" font-weight="800" fill="var(--ink)">平均</text>
+      <text x="590" y="60" font-size="22" font-weight="700" fill="var(--red3)">● 實際抽到的動作</text>
+    </svg>
+    <p class="s">寬度也是學出來的：越練越有把握，分布就越窄、試得越少。</p>
+  </div>
+  <div data-step="1" class="card fillb" style="left:984px;top:280px;width:840px;height:600px;padding:26px 34px;box-shadow:10px 10px 0 var(--red)">
+    <h3>比賽：直接用平均</h3>
+    <p>比賽不需要再試新東西，每一步都飛<b>平均</b>那個動作，也就是網路最有把握的那個。</p>
+    <p style="margin-top:28px">這就是強化學習常講的<br><b style="color:var(--amber)">探索（explore）vs 利用（exploit）</b>：<br>訓練時要多試，才找得到更好的打法；比賽時只用已經學會的。</p>
+  </div>
+</section>
+
+<section class="page" id="p-tj-selfplay" data-steps="1">
+  <div class="kick rd"><i></i>league：為什麼要對手池</div>
+  <h1 class="ttl rise">只跟<span class="r">現在的自己</span>打，會繞圈</h1>
+  <svg class="abs rise" style="--i:1;left:96px;top:270px;width:760px;height:660px;overflow:visible" viewBox="0 0 760 660">
+    <defs><marker id="tjarr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#e0302b"/></marker></defs>
+    <g fill="none" stroke="#e0302b" stroke-width="7" marker-end="url(#tjarr)">
+      <path d="M330,150 C190,220 140,330 150,440"/><path d="M230,560 C330,620 430,620 530,560"/><path d="M610,440 C620,330 570,220 430,150"/>
+    </g>
+    <g font-weight="900" text-anchor="middle">
+      <circle cx="380" cy="110" r="78" fill="#fff" stroke="#0f1b33" stroke-width="5"/><text x="380" y="104" font-size="34">打法 A</text><text x="380" y="140" font-size="22" fill="#566177">咬尾追擊</text>
+      <circle cx="150" cy="520" r="78" fill="#fff" stroke="#0f1b33" stroke-width="5"/><text x="150" y="514" font-size="34">打法 B</text><text x="150" y="550" font-size="22" fill="#566177">急轉閃開</text>
+      <circle cx="610" cy="520" r="78" fill="#fff" stroke="#0f1b33" stroke-width="5"/><text x="610" y="514" font-size="34">打法 C</text><text x="610" y="550" font-size="22" fill="#566177">爬高等待</text>
+      <text x="380" y="380" font-size="26" fill="#a31d1a">箭頭 ＝ 剋制</text><text x="380" y="414" font-size="22" fill="#566177">（示意）</text>
+    </g>
+  </svg>
+  <div class="card rise" style="--i:2;left:930px;top:280px;width:894px;padding:24px 34px">
+    <h3>像剪刀石頭布</h3>
+    <p>每一輪都只學「怎麼打贏現在的自己」：A 學會剋 A 的 B，B 又被 C 剋……</p>
+    <p>練到後來<b class="r">忘了怎麼打舊的打法</b>，看起來一直在進步，其實在原地繞圈。</p>
+  </div>
+  <div data-step="1" class="card fillk" style="left:930px;top:640px;width:894px;padding:24px 34px">
+    <h3 style="color:#fff">解法：對手池</h3>
+    <p style="color:#fff">每一局從池子裡抽對手：<b style="color:var(--amber)">舊版的自己</b>、<b style="color:var(--amber)">固定陪練</b>、<b style="color:var(--amber)">一起練的其他模型</b>。舊打法一直都在，就忘不掉。</p>
+  </div>
+</section>
+
+<section class="page" id="p-tj-seed" data-steps="1">
+  <div class="kick rd"><i></i>league：seed</div>
+  <h1 class="ttl rise">同一套配方，<span class="r">運氣</span>差很多</h1>
+  <div class="card rise" style="--i:1;left:96px;top:270px;width:1728px;padding:22px 34px">
+    <p style="margin-top:0"><b>seed</b> ＝ 隨機起點：網路一開始的權重、每一局怎麼開局，都由它決定。設定完全一樣、只換 seed，練出來的強弱可以差很多。</p>
+  </div>
+  <svg class="abs rise" style="--i:2;left:96px;top:450px;width:860px;height:470px;overflow:visible" viewBox="0 0 860 470">
+    <line x1="40" y1="400" x2="840" y2="400" stroke="#0f1b33" stroke-width="4"/>
+    <g fill="#1553e0" stroke="#0f1b33" stroke-width="3">
+      <rect x="60" y="180" width="38" height="220" rx="5"/><rect x="112" y="250" width="38" height="150" rx="5"/><rect x="164" y="120" width="38" height="280" rx="5"/><rect x="216" y="300" width="38" height="100" rx="5"/><rect x="268" y="200" width="38" height="200" rx="5"/>
+      <rect x="320" y="150" width="38" height="250" rx="5"/><rect x="372" y="270" width="38" height="130" rx="5"/><rect x="424" y="60" width="38" height="340" rx="5" fill="#f2a900"/><rect x="476" y="230" width="38" height="170" rx="5"/><rect x="528" y="190" width="38" height="210" rx="5"/>
+      <rect x="580" y="320" width="38" height="80" rx="5"/><rect x="632" y="160" width="38" height="240" rx="5"/><rect x="684" y="240" width="38" height="160" rx="5"/><rect x="736" y="210" width="38" height="190" rx="5"/><rect x="788" y="280" width="38" height="120" rx="5"/>
+    </g>
+    <text x="440" y="445" text-anchor="middle" font-size="26" font-weight="800" fill="#0f1b33">同一套設定、15 個 seed 練出來的強弱（示意）</text>
+  </svg>
+  <div data-step="1" class="card fillb" style="left:1010px;top:450px;width:814px;padding:24px 34px;box-shadow:10px 10px 0 var(--red)">
+    <h3>所以一次練 15 個</h3>
+    <p>① 挑最強的那個去比賽（黃色那條）</p>
+    <p>② 15 個互相當陪練（對手池裡的「其他 seed」）</p>
+    <p>③ 比較兩種設定好不好，要看<b style="color:var(--amber)">很多個 seed 的平均</b>，只看一個可能只是運氣</p>
+  </div>
+</section>
+
+<section class="page" id="p-tj-split" data-steps="1">
+  <div class="kick"><i></i>怎麼判斷模型的能力</div>
+  <h1 class="ttl rise">考試要用<span class="b">沒看過</span>的題目</h1>
+  <div class="card rd rise" style="--i:1;left:96px;top:280px;width:840px;height:400px;padding:26px 34px">
+    <h3 class="r">只看訓練對手的勝率</h3>
+    <p>模型天天跟這些對手打，贏它們可能只是<b>剛好剋它們</b>，就像只背考古題。</p>
+    <p>比賽遇到的是別隊練出來的模型，我們事先看不到。</p>
+  </div>
+  <div data-step="1" class="card bl" style="left:984px;top:280px;width:840px;height:400px;padding:26px 34px">
+    <h3 class="b">用訓練時從沒見過的對手</h3>
+    <p>跟機器學習的<b>訓練集／測試集</b>一樣：測試集絕對不能拿來訓練，分數才代表「遇到陌生對手會怎樣」。</p>
+    <p>我們的測試集：<b class="b">韓國比賽冠軍隊公開的模型</b>（下一頁）。</p>
+  </div>
+  <div class="abs rise m" style="--i:3;left:96px;top:740px;width:1728px;font-size:30px;line-height:1.45">每個模型練完都考同一份考試；要挑哪個模型、哪種設定比較好，都看考試分數。</div>
+</section>
+
+<section class="page" id="p-tj-shield" data-steps="2">
+  <div class="kick rd"><i></i>比賽當天</div>
+  <h1 class="ttl rise">安全盾：<span class="r">快撞地時，規則接手</span></h1>
+  <div class="card rd rise" style="--i:1;left:96px;top:270px;width:560px;height:580px;padding:24px 30px">
+    <h3 class="r">為什麼需要</h3>
+    <p>RL 模型只學到訓練裡<b>常遇到、分數有反映</b>的情況。</p>
+    <p>貼著地面、姿態很極端的局面很少遇到，模型在那裡會怎麼飛<b>沒有人能保證</b>，也沒辦法事先證明它不會撞。</p>
+    <p>比賽中掉到 50 m 以下就直接輸。</p>
+  </div>
+  <div data-step="1" class="card bl" style="left:680px;top:270px;width:560px;height:580px;padding:24px 30px">
+    <h3 class="b">怎麼做</h3>
+    <p>快撞地時，規則把飛機搶過來：<b>先滾正、再拉起</b>，不再往下掉就交還給網路。</p>
+    <p>什麼時候接手：查一張表。事先把各種<b>速度 × 俯衝角 × 坡度</b>都實際飛一次，量出拉起來會掉多少高度。</p>
+  </div>
+  <div data-step="2" class="card fillk" style="left:1264px;top:270px;width:560px;height:580px;padding:24px 30px">
+    <h3 style="color:#fff">取捨</h3>
+    <p style="color:#fff">盾接手的那幾秒動作固定，對手看得出來，<b style="color:var(--amber)">會被咬住</b>。接手太早，反而把位置讓給對方。</p>
+    <p style="color:#fff">所以只留一點點餘裕；而且<b style="color:var(--amber)">訓練時不開</b>，模型要自己學會不撞地，不能靠盾。</p>
+  </div>
+</section>
+
+<section class="page" id="p-tj-roster" data-steps="1">
+  <div class="kick"><i></i>比賽當天</div>
+  <h1 class="ttl rise">沒有一顆全勝 → <span class="b">帶 9 顆</span>上場</h1>
+  <div class="abs rise m" style="--i:1;left:96px;top:250px;width:1728px;font-size:30px;line-height:1.45">我們自己的模型之間也會互相剋，跟前面的剪刀石頭布一樣。比賽一場是 <b style="color:var(--ink)">BO3 / BO5</b>，回合之間可以換模型。</div>
+  <div class="card bl rise" style="--i:2;left:96px;top:400px;width:540px;height:300px;padding:24px 30px">
+    <h3 class="b">首發</h3>
+    <p>考試最穩的那顆：打陌生對手最不容易輸。</p>
+  </div>
+  <div class="card rd rise" style="--i:3;left:690px;top:400px;width:540px;height:300px;padding:24px 30px">
+    <h3 class="r">換將</h3>
+    <p>開局沒多久就被打下來，代表對手剋首發 → 換互打最強、從<b>另一個祖先</b>練出來的那顆。</p>
+  </div>
+  <div class="card rise" style="--i:4;left:1284px;top:400px;width:540px;height:300px;padding:24px 30px">
+    <h3>其他 7 顆</h3>
+    <p>不同打法備著；四隊共用這一包，隊友之間互通看到的對手。</p>
+  </div>
+  <div data-step="1" class="abs m" style="left:96px;top:760px;width:1728px;font-size:30px;line-height:1.45"><b style="color:var(--ink)">怎麼換</b>：事先定好簡單的規則，比賽中照著做，不臨場猜。</div>
+</section>
+
+<section class="page" id="p-tj-end" data-steps="0" style="background:radial-gradient(1200px 800px at 70% 0%,rgba(242,169,0,.20),transparent 60%),radial-gradient(1000px 700px at 0% 100%,rgba(21,83,224,.12),transparent 60%),var(--bg)">
+  <h1 class="rise" style="position:absolute;left:0;width:1920px;top:380px;text-align:center;font-size:150px;font-weight:900">謝謝聆聽</h1>
+  <div class="abs rise m" style="--i:2;left:0;width:1920px;top:600px;text-align:center;font-size:36px">tailgater · F-16 1 對 1 機砲纏鬥 · 強化學習</div>
+  <div class="abs rise" style="--i:3;left:0;width:1920px;top:690px;text-align:center;font-size:40px;font-weight:900;color:var(--blue)">Q &amp; A</div>
+</section>
+
+<!-- ===================== TJ 短版：league 一頁 ===================== -->
+<section class="page" id="p-tj-league" data-steps="2">
+  <div class="kick rd"><i></i>league</div>
+  <h1 class="ttl rise">對手池：<span class="r">跟誰打</span></h1>
+  <div class="abs rise" style="--i:1;left:96px;top:262px;font-size:28px;font-weight:900;color:var(--mute)">每一局從池子裡抽一個對手</div>
+  <div class="card bl rise" style="--i:1;left:96px;top:315px;width:400px;height:170px;padding:14px 24px"><div class="num b" style="font-size:58px">30%</div><b style="font-size:28px">自己</b><div style="font-size:22px;color:var(--mute)">最新的自己</div></div>
+  <div class="card bl rise" style="--i:2;left:530px;top:315px;width:400px;height:170px;padding:14px 24px"><div class="num b" style="font-size:58px">25%</div><b style="font-size:28px">自己的舊版</b><div style="font-size:22px;color:var(--mute)">每 800 萬步存一個，最多 40 個</div></div>
+  <div class="card rd rise" style="--i:3;left:96px;top:515px;width:400px;height:170px;padding:14px 24px"><div class="num r" style="font-size:58px">25%</div><b style="font-size:28px">固定對手</b><div style="font-size:22px;color:var(--mute)">規則對手、範例 AI、模仿者</div></div>
+  <div class="card rd rise" style="--i:4;left:530px;top:515px;width:400px;height:170px;padding:14px 24px"><div class="num r" style="font-size:58px">20%</div><b style="font-size:28px">其他 seed</b><div style="font-size:22px;color:var(--mute)">同時練的另外 14 個主模型</div></div>
+  <div data-step="1" class="card" style="left:990px;top:315px;width:834px;padding:20px 30px;box-shadow:10px 10px 0 var(--red)">
+    <h3 style="font-size:32px">固定對手：永遠在池裡的陪練</h3>
+    <p style="font-size:24px;line-height:1.5;margin-top:8px">公開模型 junhwa_final 的<b>模仿者</b>（權重最高）＋ 手寫規則對手（純追擊、三狀態機、急轉、急煞誘敵…）＋ 主辦方範例 AI。</p>
+    <p style="font-size:24px;line-height:1.5;margin-top:8px">組內照 <span class="mth"><i class="v">p</i>(1 − <i class="v">p</i>)</span> 抽（<i class="v">p</i>＝我方勝率）：五五波的最常抽，全贏或全輸的少抽。<b>考官永遠不進池。</b></p>
+  </div>
+  <div data-step="2" class="card fillk" style="left:990px;top:640px;width:834px;padding:20px 30px;box-shadow:10px 10px 0 var(--amber)">
+    <h3 style="font-size:32px;color:#fff">15 個 seed 互相當陪練</h3>
+    <p style="font-size:24px;line-height:1.5;margin-top:8px;color:#fff">一張顯卡同時練 15 個 seed；其他 14 個的最新存檔進池，打不贏的抽比較多，每 4000 萬步換一次版本、錯開換。<br>彼此找彼此的弱點 → <b style="color:var(--amber)">不用另外練 exploiter</b>，練完 15 個候選、用考試挑。</p>
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+<!-- ============ 參考資料 ============ -->
+<section class="page" id="p-ref" data-steps="0">
+  <div class="kick"><i></i>reference</div>
+  <h1 class="ttl rise">參考資料</h1>
+  <div class="card rise" style="--i:1;left:96px;top:250px;width:850px;height:770px;padding:22px 30px;box-shadow:8px 8px 0 var(--blue)">
+    <div class="refs">
+      <h4>演算法</h4>
+      <p>J. Schulman et al., “Proximal Policy Optimization Algorithms,” arXiv:1707.06347, 2017.<span>PPO</span></p>
+      <p>J. Schulman et al., “High-Dimensional Continuous Control Using Generalized Advantage Estimation,” ICLR 2016.<span>算「比預期好多少」（GAE）</span></p>
+      <p>A. Y. Ng, D. Harada, S. Russell, “Policy Invariance under Reward Transformations,” ICML 1999.<span>對準引導（不改變最佳打法的引導分）</span></p>
+      <h4>網路</h4>
+      <p>H. Lee et al., “SimBa: Simplicity Bias for Scaling Up Parameters in Deep Reinforcement Learning,” ICLR 2025.<span>LayerNorm ＋ residual</span></p>
+      <p>J. L. Ba, J. R. Kiros, G. E. Hinton, “Layer Normalization,” arXiv:1607.06450, 2016.</p>
+      <p>K. He et al., “Deep Residual Learning for Image Recognition,” CVPR 2016.</p>
+      <h4>權重平均</h4>
+      <p>M. Wortsman et al., “Model Soups: Averaging Weights of Multiple Fine-Tuned Models Improves Accuracy without Increasing Inference Time,” ICML 2022.<span>同一起點分出去的模型直接平均</span></p>
+      <p>A. Ramé et al., “WARP: On the Benefits of Weight Averaged Rewarded Policies,” arXiv:2406.16768, 2024.<span>平均之後再用 RL 練，反覆做</span></p>
+      <p>J. Frankle et al., “Linear Mode Connectivity and the Lottery Ticket Hypothesis,” ICML 2020.<span>同祖先才平均得起來</span></p>
+    </div>
+  </div>
+  <div class="card rise" style="--i:2;left:974px;top:250px;width:850px;height:770px;padding:22px 30px;box-shadow:8px 8px 0 var(--red)">
+    <div class="refs">
+      <h4>對手池</h4>
+      <p>O. Vinyals et al., “Grandmaster Level in StarCraft II Using Multi-Agent Reinforcement Learning,” Nature, 2019.<span>league、照勝率抽對手（PFSP）</span></p>
+      <p>M. Jaderberg et al., “Human-Level Performance in 3D Multiplayer Games with Population-Based Reinforcement Learning,” Science, 2019.<span>一群模型一起練、互相對打</span></p>
+      <p>CloseAirCombat（github.com/liuqh16/CloseAirCombat）<span>空戰的姿態分</span></p>
+      <h4>飛行模擬</h4>
+      <p>JSBSim（github.com/JSBSim-Team/jsbsim）；F-16 氣動資料：L. T. Nguyen et al., NASA TP-1538, 1979.<span>GPU 版是我們自己移植的</span></p>
+      <h4>比賽與考官</h4>
+      <p>神盾盃 AI 空戰競賽規則（主辦方公告）<span>計分、封包、Host</span></p>
+      <p>2026 AI Pilot Top Gun Challenge 冠軍隊（추락도락이다）：github.com/idearendil/2026_AI_Pilot_Challenge-1st_Solution；李泰民（Taemin Lee）賽後報告，2026。<span>jf、jx、jw</span></p>
+      <p>github.com/gyuLee21/aipilot-rl<span>g69</span></p>
+    </div>
+  </div>
+</section>
+
+<div id="knobs" hidden></div>
+<div id="toc" hidden></div>
+<div class="ring" id="ring"></div><!-- 放在舞台裡：座標是 1920×1080 的舞台座標，跟著舞台縮放 -->
+</div><!-- #stage -->
+<button id="tocbtn" type="button">☰ 目錄<kbd>T</kbd></button>
+<div id="hud"><div id="kh" hidden><kbd>M</kbd>這一頁可以調的東西</div><div id="dots"></div><div id="steps"></div><div id="pg"></div></div>
+<div class="wall" id="wall"></div>
+<div id="gate" hidden><div class="gc"><div class="gt" id="gateT"></div><div class="gs" id="gateS"></div><button id="gateB" hidden>仍要在這裡看</button></div></div>
+<script>
+(function(){
+"use strict";
+
+/* ===================== 數值（從 config/default.py 等抄來；改這裡就好） ===================== */
+const D = {
+  // tailgater/rules.py ——主辦方 10/02 權重圖（1006 確認新版 Host 照這組算，D63）
+  rules:{ hz:60, secs:300, kill_s:3, crash_m:50, coll_m:15,
+          w_base:30000, w_time:10000, w_g:100, w_pos:1, g_limit:9,
+          dist:[[150,0.1],[500,1.2],[1500,1.0],[3000,0.5],[null,0.1]] },
+  // 開局：config/default.py INIT_MODES；距離、高度、速度＝ tailgater/gpu/opening.py sample() 的預設（RuleConfig 沒有覆寫）
+  open:{ dist:'3000 / 6000 / 9000', alt:'10000–20000', kts:340,
+         modes:[['official',0.45],['defensive',0.25],['tail_chase',0.20],['random',0.10]] },
+  // 觀測：base 27 × 最近 6 幀 ＋ 上一動作 4 ＋ 更早 4 個動作 16（w1024ah_frames6 1010 採用；方向舵 1012 起，動作 3 → 4 個）；油量拿掉（每幀鎖滿，永遠 1.0）；
+  // 重複幀 3%（只在訓練）；ẑ 先不加（LAM 等環境確定後重做）；config/default.py
+  obs:{ pkt:27, frames:6, last:4, hist:16, act:4, dup:'3%', z:32, hz:10, fc_hz:60 },
+  // tailgater/flight_control.py PlanAController 的預設增益
+  ctl:{ kp_g:0.04, ki_g:0.35, kp_p:0.15, ki_p:0.6 },
+  // tailgater/networks.py
+  net:{ hidden:1024, jf_in:214 },   // D64
+  // config/default.py ppo_config()、tailgater/train/config.py
+  ppo:{ envs:16384, steps:32, mb:32, epochs:5, lr:'3e-4', kl:0.01, gamma:0.995, total:1e9, save:4e6 },   // 1010 起練 10 億步
+  // tailgater/reward.py、config/default.py
+  reward:{ norm:30000, win:10, kill:5, crash:2, att:2.0, posture:0.05, tau:6 },
+  // tailgater/train/config.py ＋ config/default.py
+  cur:{ open_share:0.8, open_up:0.3, open_down:0.1, open_step:0.05, n:300, cone_start:5, cone_end:1, cone_kill:0.2, cone_step:0.1,
+        warm_fixed:0.8, warm_lo:0.2, warm_hi:0.7 },
+  // config/default.py league_config()
+  lg:{ share:{self:0.30, fixed:0.25, hist:0.25, exploit:0.20}, hist_every:8e6, hist_cap:40, exploit_cap:20,
+       ex_wr:0.55, ex_min:200, timeout:40e6, le_wr:0.6, le_min:50, le_reset:0.25 },
+  // config/default.py FIXED、MIMIC、TARGETS：[名字, 組內權重, 說明]
+  fixed:[ ['mimic_v2b',0.5,'公開的模型 junhwa_final 的模仿者（我們自己的網路，只當陪練）'],
+          ['pursuit_safe',0.225,'純追擊（不會自己墜地的版本）'],
+          ['seca_safe',0.18,'三狀態機：對準 → 追蹤 → 防禦拖拽'],
+          ['official_sac',0.18,'主辦方的範例 AI'],
+          ['pursuit',0.09,'純追擊'],
+          ['breaker_safe',0.09,'平飛，被瞄準就急轉'],
+          ['brake_trap',0.04,'被咬住就收油門急煞，逼對方衝過頭'],
+          ['seca_brake',0.03,'同上，底層是 SECA'],
+          ['shadow2_brake',0.03,'同上，底層是遠吊型 shadow2'] ],
+  targets:[['straight',0.1],['turn',0.1],['weave',0.1]],
+  exam:[ ['jf','junhwa_final','冠軍隊 repo 公開的模型',250,'ext'], ['jx','exploiter','同一個 repo 的 exploiter',250,'ext'],
+         ['jw','wide1_v2','同一個 repo 的另一個模型',250,'ext'], ['g69','gylee_69k','同一個 repo，練到 69 000 輪',250,'ext'],
+         ['g20','gylee_20k','同一個 repo，練到 20 000 輪',250,'ext'] ]
+};
+D.obs.past = D.obs.pkt * (D.obs.frames - 1);
+D.obs.total = D.obs.pkt * D.obs.frames + D.obs.last + D.obs.hist;
+D.ppo.batch = D.ppo.envs * D.ppo.steps;
+D.cur.open_share_pct = Math.round(D.cur.open_share*100) + '%';
+D.cur.warm_fixed_pct = Math.round(D.cur.warm_fixed*100) + '%';
+D.lg.timeout_m = (D.lg.timeout/1e6) + 'M';
+D.lg.le_reset = Math.round(D.lg.le_reset*100) + '%';
+D.lg.share_txt='自己 '+Math.round(D.lg.share.self*100)+'% · 固定 '+Math.round(D.lg.share.fixed*100)+'% · 舊版 '+Math.round(D.lg.share.hist*100)+'% · 其他 seed '+Math.round(D.lg.share.exploit*100)+'%';
+const nb = ' ';
+function fmt(v){ if(typeof v==='number'){ if(Number.isInteger(v)&&v>=10000) return String(v).replace(/\B(?=(\d{3})+(?!\d))/g,nb); return String(v); } return String(v); }
+function bind(){ document.querySelectorAll('[data-v]').forEach(function(e){ var p=e.getAttribute('data-v').split('.'), v=D; for(var i=0;i<p.length;i++) v=v[p[i]]; if(v===undefined) throw new Error('data-v '+e.getAttribute('data-v')); e.textContent=fmt(v); }); }
+
+/* ===================== 小工具 ===================== */
+const NS='http://www.w3.org/2000/svg';
+function S(tag,attrs,parent){ var e=document.createElementNS(NS,tag); for(var k in attrs) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+function H(tag,attrs,parent,html){ var e=document.createElement(tag); for(var k in attrs) e.setAttribute(k,attrs[k]); if(html!==undefined) e.innerHTML=html; if(parent) parent.appendChild(e); return e; }
+function T(parent,x,y,s,size,fill,anchor,w){ var t=S('text',{x:x,y:y,'font-size':size||26,fill:fill||INK,'text-anchor':anchor||'start','font-weight':w||700},parent); t.textContent=s; return t; }
+const BLUE='#1553e0', RED='#e0302b', INK='#0f1b33', AMBER='#f2a900', BL3='#8fb1f5', DR='#a31d1a', GREY='#c9d0dd';
+const rad=Math.PI/180;
+
+/* F-16 俯視剪影：機頭朝右，100 × 70 */
+(function(){
+  var half=[[100,0],[94,1.4],[86,2.8],[78,3.5],[68,4.1],[61,6.2],[53,10.2],[50,11],[31,30],[27.5,30.6],[24.5,30],[20,20],[17.5,10],[16,8],[14,7],[12.5,8.5],[4,20],[0.5,20],[3,9],[6,5.6],[0,4.2]];
+  var top=half.map(function(p){return [p[0],35-p[1]]}), bot=half.slice().reverse().map(function(p){return [p[0],35+p[1]]});
+  var d='M'+top.map(function(p){return p.join(',')}).join('L')+'L'+bot.map(function(p){return p.join(',')}).join('L')+'Z';
+  document.getElementById('jetp').setAttribute('d',d);
+  document.getElementById('jetp').setAttribute('fill','currentColor');
+})();
+/* 在 parent（svg）放一架長 len 的飛機，原點在機身中心；回傳 <g>，用 pose() 擺 */
+function jet(parent,color,len,opacity){
+  var g=S('g',{},parent); var u=S('use',{href:'#jet',x:-len/2,y:-len*.35,width:len,height:len*.7},g); u.style.color=color; if(opacity!==undefined) g.setAttribute('opacity',opacity); return g;
+}
+function pose(g,x,y,deg,sc){ g.setAttribute('transform','translate('+x.toFixed(1)+','+y.toFixed(1)+') rotate('+deg.toFixed(1)+')'+(sc?' scale('+sc+')':'')); }
+function orbitPose(g,cx,cy,rx,ry,th){ var x=cx+rx*Math.cos(th), y=cy+ry*Math.sin(th); var dx=-rx*Math.sin(th), dy=ry*Math.cos(th); pose(g,x,y,Math.atan2(dy,dx)/rad); return [x,y]; }
+function box(parent,x,y,w,h,fill,stroke,sw,rx){ return S('rect',{x:x,y:y,width:w,height:h,rx:rx===undefined?14:rx,fill:fill||'#fff',stroke:stroke||INK,'stroke-width':sw||4},parent); }
+function arrow(parent,d,color,sw){ S('path',{d:d,fill:'none',stroke:color||INK,'stroke-width':sw||5,'stroke-linecap':'round'},parent); }
+function head(parent,x,y,dir,color,s){ s=s||14; var pts={r:[[x,y],[x-s,y-s*.65],[x-s,y+s*.65]],d:[[x,y],[x-s*.65,y-s],[x+s*.65,y-s]],l:[[x,y],[x+s,y-s*.65],[x+s,y+s*.65]],u:[[x,y],[x-s*.65,y+s],[x+s*.65,y+s]]}[dir]; S('polygon',{points:pts.map(function(p){return p.join(',')}).join(' '),fill:color||INK},parent); }
+
+/* 逐頁的動畫（只有顯示中的頁才跑） */
+const ticks=[]; function onTick(pageId,fn){ ticks.push({id:pageId,fn:fn}); }
+var TT=0, lastTs=0;
+function loop(ts){ var dt=Math.min(.1,(ts-lastTs)/1000); lastTs=ts; TT=ts/1000;
+  for(var i=0;i<ticks.length;i++){ var p=document.getElementById(ticks[i].id); if(p.classList.contains('on')) ticks[i].fn(TT,dt); }
+  requestAnimationFrame(loop); }
+
+/* 共用：一局 1 對 1 的小畫面（GPU 頁中間那格、對手池頁中間那局共用，放大時才接得起來） */
+function heroPose(t){
+  var th=t*.9; return { r:[320+215*Math.cos(th+.9),200+120*Math.sin(th+.9),th+.9], b:[320+190*Math.cos(th),200+105*Math.sin(th),th] };
+}
+function heroBuild(svg,withFrame){
+  if(withFrame) S('rect',{x:0,y:0,width:640,height:400,fill:'#fff',stroke:INK,'stroke-width':6,rx:18},svg);
+  var trR=S('polyline',{fill:'none',stroke:RED,'stroke-opacity':.3,'stroke-width':4},svg), trB=S('polyline',{fill:'none',stroke:BLUE,'stroke-opacity':.3,'stroke-width':4},svg);
+  var gr=jet(svg,RED,112), gb=jet(svg,BLUE,112);
+  return {update:function(t){
+    var pr=[],pb=[];
+    for(var k=18;k>=0;k--){ var hh=heroPose(t-k*.05); pr.push(hh.r[0].toFixed(0)+','+hh.r[1].toFixed(0)); pb.push(hh.b[0].toFixed(0)+','+hh.b[1].toFixed(0)); }
+    trR.setAttribute('points',pr.join(' ')); trB.setAttribute('points',pb.join(' '));
+    var h=heroPose(t), r=h.r, b=h.b;
+    pose(gr,r[0],r[1],Math.atan2(120*Math.cos(r[2]),-215*Math.sin(r[2]))/rad);
+    pose(gb,b[0],b[1],Math.atan2(105*Math.cos(b[2]),-190*Math.sin(b[2]))/rad);
+  }};
+}
+
+var P={}, HOOK={};
+var SHORT=false;   // 最新版沒有精簡版
+var LAM=false;     // 最新版不放 LAM
+if(LAM) document.documentElement.classList.add('lam');
+if(SHORT) document.documentElement.classList.add('short');
+var SHORT_DECK=[];
+
+/* ===================== 各頁 ===================== */
+
+/* --- 標題：藍追紅，藍機帶著它的錐也在小幅度擺動 --- */
+P['p-title']=function(){
+  var svg=document.getElementById('titlesvg'); var gr=jet(svg,RED,190), gb=jet(svg,BLUE,190);
+  var cone=S('polygon',{points:'95,0 400,-26 400,26',fill:'rgba(21,83,224,.13)',stroke:'rgba(21,83,224,.35)','stroke-width':2},gb); gb.insertBefore(cone,gb.firstChild);
+  var tr=[],tb=[];
+  onTick('p-title',function(t){
+    var cx=1390,cy=560,th=t*.55;
+    var r=orbitPose(gr,cx,cy,330,330,th+.9+.06*Math.sin(t*.9));
+    var rb=300+26*Math.sin(t*.8), b=orbitPose(gb,cx,cy,rb,rb,th-.05*Math.sin(t*.7));
+    tr.push(r.map(function(v){return v.toFixed(0)}).join(',')); tb.push(b.map(function(v){return v.toFixed(0)}).join(','));
+    if(tr.length>110){tr.shift();tb.shift();}
+    document.getElementById('tr-r').setAttribute('points',tr.join(' ')); document.getElementById('tr-b').setAttribute('points',tb.join(' '));
+  });
+};
+
+/* --- 規則：攻擊錐（藍機和它的錐一起小幅擺動） --- */
+P['p-rules']=function(){
+  var svg=document.getElementById('rulessvg'); var NOSE=120, tan=Math.tan(1*rad);     // 照正式規則：半角 1°（不放大）
+  var bg=S('g',{},svg);
+  var zone=S('polygon',{fill:'rgba(242,169,0,.26)',stroke:AMBER,'stroke-width':3},bg);
+  var z0=NOSE+225, z1=NOSE+1350;
+  zone.setAttribute('points',z0+','+(-225*tan).toFixed(1)+' '+z1+','+(-1350*tan).toFixed(1)+' '+z1+','+(1350*tan).toFixed(1)+' '+z0+','+(225*tan).toFixed(1));
+  S('line',{x1:NOSE,y1:0,x2:z0,y2:0,stroke:'rgba(15,27,51,.35)','stroke-width':2,'stroke-dasharray':'8 8'},bg);
+  [z0,z1].forEach(function(x){ S('line',{x1:x,y1:-80,x2:x,y2:120,stroke:INK,'stroke-width':3},bg); });
+  var t1=T(bg,z0,-110,'500 呎',30,INK,'middle',700); var s1=S('tspan',{fill:'#566177','font-weight':400},t1); s1.textContent=' ≈ 152 m';
+  var t2=T(bg,z1,-110,'3000 呎',30,INK,'middle',700); var s2=S('tspan',{fill:'#566177','font-weight':400},t2); s2.textContent=' ≈ 914 m';
+  T(bg,(z0+z1)/2,-190,'錐的半角只有 1°（照實際比例）',28,'#566177','middle',400);
+  var bj=jet(bg,BLUE,240);
+  var rj=jet(svg,RED,170); var ring=S('circle',{r:70,fill:'none',stroke:RED,'stroke-width':6,opacity:0},svg);
+  // 擊落：紅機從中間裂成前後兩半、邊轉邊往下掉；重新計時時恢復
+  var df=S('defs',{},svg);
+  S('rect',{x:0,y:-120,width:140,height:240},S('clipPath',{id:'rjFront'},df));
+  S('rect',{x:-140,y:-120,width:140,height:240},S('clipPath',{id:'rjBack'},df));
+  var flash=S('circle',{r:0,fill:AMBER,opacity:0},svg);
+  var halves=['rjFront','rjBack'].map(function(id){ var w=S('g',{opacity:0},svg); jet(w,RED,170).setAttribute('clip-path','url(#'+id+')'); return w; });
+  var puffs=[0,1,2,3,4,5].map(function(){ return S('circle',{r:0,fill:'#566177',opacity:0},svg); });
+  var kx=0,ky=0,kt=0, HOLD=2.6;
+  var acc=0,hold=0, bar=document.getElementById('p2bar'), kill=document.getElementById('p2kill');
+  onTick('p-rules',function(t,dt){
+    var bx=250+22*Math.sin(t*.5), by=500+30*Math.sin(t*.7), ba=3.4*Math.sin(t*.9+1);
+    bg.setAttribute('transform','translate('+bx.toFixed(1)+','+by.toFixed(1)+') rotate('+ba.toFixed(2)+')');
+    var x=1150+600*Math.sin(t*.33), y=by+78*Math.sin(t*.9+1)+20*Math.sin(t*2.1);
+    if(hold<=0){ pose(rj,x,y,0); ring.setAttribute('cx',x); ring.setAttribute('cy',y); }
+    var dx=x-bx, dy=y-by, c=Math.cos(ba*rad), s=Math.sin(ba*rad); var lx=dx*c+dy*s, ly=-dx*s+dy*c;
+    var inside = lx>z0 && lx<z1 && Math.abs(ly)<(lx-NOSE)*tan;
+    if(hold>0){ hold-=dt; kt+=dt; kill.style.opacity=1; wreck(); if(hold<=0){ acc=0; kill.style.opacity=0; rj.setAttribute('opacity',1); halves.concat(puffs,[flash]).forEach(function(e){ e.setAttribute('opacity',0); }); } }
+    else{ if(inside) acc+=dt*1.6; if(acc>=3){ acc=3; hold=HOLD; kt=0; kx=x; ky=y; rj.setAttribute('opacity',0); } }
+    if(hold<=0){ zone.setAttribute('fill', inside?'rgba(21,83,224,.28)':'rgba(242,169,0,.26)'); zone.setAttribute('stroke', inside?BLUE:AMBER); }
+    ring.setAttribute('opacity', inside&&hold<=0?1:0);
+    bar.style.width=(acc/3*100).toFixed(1)+'%';
+  });
+  function wreck(){
+    var fade=Math.max(0,Math.min(1,(HOLD-kt)/0.5));
+    var fall=-60*kt+120*kt*kt;                                       // 先往上彈一下再掉（約 2.6 s 掉出畫面下緣）
+    pose(halves[0],kx+18+45*kt,ky+fall,26*kt+10*kt*kt); pose(halves[1],kx-18-38*kt,ky+fall*1.12,-34*kt-14*kt*kt);
+    halves.forEach(function(h){ h.setAttribute('opacity',fade.toFixed(2)); });
+    flash.setAttribute('cx',kx); flash.setAttribute('cy',ky);
+    flash.setAttribute('r',(40+260*Math.min(kt,.35)).toFixed(0)); flash.setAttribute('opacity',Math.max(0,.75-kt*2.4).toFixed(2));
+    puffs.forEach(function(c,i){ var a=kt-i*.12; if(a<0){ c.setAttribute('opacity',0); return; }
+      c.setAttribute('cx',(kx-10*i+(i%2?14:-14)).toFixed(0)); c.setAttribute('cy',(ky-60*a+120*a*a*.55+i*6).toFixed(0));
+      c.setAttribute('r',(14+28*a).toFixed(0)); c.setAttribute('opacity',(Math.max(0,.45-a*.22)*fade).toFixed(2)); });
+  }
+};
+
+/* --- 比分：距離因子（點一下才出現） --- */
+P['p-score']=function(){
+  var svg=document.getElementById('scoresvg'); var g=S('g',{'data-step':'1'},svg); var X0=1110,W=140,G=14,BASE=800,SC=300;
+  var lab=['< 150 m','150–500','500–1500','1500–3000','> 3000'];
+  D.rules.dist.forEach(function(d,i){
+    var h=d[1]*SC/1.2, x=X0+i*(W+G);
+    box(g,x,BASE-h,W,h,d[1]>=1?BLUE:(d[1]>=.5?BL3:'#c9d6ee'),INK,4,10);
+    var t=S('text',{x:x+W/2,y:BASE-h-14,'text-anchor':'middle','font-size':38,'font-weight':900,'font-family':'ui-monospace,Consolas,monospace'},g); t.textContent=d[1].toFixed(1);
+    T(g,x+W/2,BASE+40,lab[i],25,'#566177','middle',700);
+  });
+  S('line',{x1:X0-10,y1:BASE,x2:X0+5*(W+G),y2:BASE,stroke:INK,'stroke-width':5},g);
+  T(g,X0,BASE+86,'兩機距離（公尺）',26,'#566177','start',400);
+  T(g,X0,BASE+128,'150–1500 m 之間分最高；',25,'#566177','start',400);
+  T(g,X0,BASE+164,'貼太近（< 150 m）或離太遠（> 3000 m）幾乎沒分',25,'#566177','start',400);
+};
+
+/* --- 開局：四種開局的相對位置 --- */
+P['p-open']=function(){
+  var root=document.getElementById('openCards');
+  var spec={
+    official:['比賽的公平開局','兩機平行、方向相反，敵機在我正側方'],
+    defensive:['我方被追','敵機在我正後方，航向差 ±20°'],
+    tail_chase:['我方追人','我方在敵機正後方，航向差 ±20°'],
+    random:['隨機','兩機的航向各自亂數'] };
+  D.open.modes.forEach(function(m,i){
+    var key=m[0], x=96+i*432;
+    var c=H('div',{class:'card rise',style:'--i:'+(i+1)+';left:'+x+'px;top:270px;width:408px;height:545px;padding:18px 22px;box-shadow:8px 8px 0 '+(key==='defensive'?RED:BLUE)},root);
+    H('div',{class:'num',style:'font-size:64px;line-height:1;color:'+(key==='defensive'?RED:BLUE)},c,Math.round(m[1]*100)+'<span style="font-size:32px">%</span>');
+    H('div',{style:'font-size:34px;font-weight:900;margin-top:4px'},c,spec[key][0]);
+    var svg=S('svg',{viewBox:'0 0 360 250',style:'width:100%;margin-top:8px'},c);
+    S('rect',{x:0,y:0,width:360,height:250,rx:12,fill:'#f4f7fd'},svg);
+    var bj=jet(svg,BLUE,76), rj=jet(svg,RED,76);
+    var pb,pr,ang=0;
+    if(key==='official'){ pose(bj,180,172,0); pose(rj,180,78,180); arrow(svg,'M180,130 V120','#566177',2);
+      S('line',{x1:180,y1:105,x2:180,y2:145,stroke:'#566177','stroke-width':3,'stroke-dasharray':'6 6'},svg); T(svg,200,132,'側向錯開',22,'#566177','start',700); }
+    else if(key==='defensive'){ pose(bj,240,125,0); pose(rj,100,132,-8); S('line',{x1:140,y1:128,x2:200,y2:126,stroke:'#566177','stroke-width':3,'stroke-dasharray':'6 6'},svg); T(svg,150,210,'敵機在後面追',22,RED,'start',700); }
+    else if(key==='tail_chase'){ pose(rj,240,125,0); pose(bj,100,132,8); S('line',{x1:140,y1:128,x2:200,y2:126,stroke:'#566177','stroke-width':3,'stroke-dasharray':'6 6'},svg); T(svg,150,210,'我方在後面追',22,BLUE,'start',700); }
+    else { pose(bj,110,170,-38); pose(rj,250,85,150); S('line',{x1:140,y1:150,x2:222,y2:105,stroke:'#566177','stroke-width':3,'stroke-dasharray':'6 6'},svg); T(svg,150,225,'航向亂數',22,'#566177','start',700); }
+    H('div',{style:'font-size:25px;line-height:1.4;color:#566177;margin-top:10px'},c,spec[key][1]);
+  });
+};
+
+/* --- 觀測：每一步亮起長條的對應那段 --- */
+HOOK['p-obs']=function(k){ var seg={1:[1],2:[5],3:[2,4]}[k]||[]; document.querySelectorAll('#obsbar .sg').forEach(function(s){ s.classList.toggle('dim',k>0&&seg.indexOf(+s.dataset.k)<0); }); };
+
+/* --- 神經網路：結構 + 訊號往前傳 --- */
+P['p-nn']=function(){
+  // LayerNorm ＋ residual（networks.NormMLP arch="res"）：u = W1·x；f = Wr·tanh(W2·tanh(LN1(u)))；y = W3·tanh(LN2(u + f))
+  var svg=document.getElementById('nnsvg'); var gE=S('g',{},svg), gN=S('g',{},svg), gT=S('g',{},svg);
+  function ys(cy,n,sp){ var a=[]; for(var i=0;i<n;i++) a.push(cy+(i-(n-1)/2)*sp); return a; }
+  var inY=ys(640,14,38), aY=ys(500,7,32), cY=ys(820,7,32);
+  var xIn=120, xBox=230, xU=420, xH=600, xF=780, xZ=960, xO=1140, AMB='#e08a00';
+  function edge(x1,y1,x2,y2,d,st){ S('line',{x1:x1,y1:y1,x2:x2,y2:y2,class:'e',style:'--d:'+d+(st?';'+st:'')},gE); }
+  function node(x,y,d,cls,r,fill){ var c=S('circle',{cx:x,cy:y,r:r||13,class:'n '+(cls||''),style:'--d:'+d},gN); if(fill) c.style.fill=fill; }
+  inY.forEach(function(y){ node(xIn,y,0,'',10); edge(xIn+10,y,xBox,y,.35); });
+  T(gT,xIn,inY[0]-30,'輸入',28,INK,'middle'); T(gT,xIn,inY[inY.length-1]+54,D.obs.total+' 維',32,BLUE,'middle',900);
+  S('rect',{x:xBox,y:370,width:52,height:540,rx:14,fill:'#fff',stroke:INK,'stroke-width':4},gN);
+  var t=T(gT,xBox+26,640,'ObsNorm（正規化）',26,INK,'middle'); t.setAttribute('transform','rotate(-90 '+(xBox+26)+' 640)');
+  (SHORT?[[ys(660,7,40),660,'網路：看觀測 → 決定動作',1]]:[[aY,500,'actor（決定動作）',1],[cY,820,'critic（估這局面值幾分）',2]]).forEach(function(cfg,bi){
+    var ay=cfg[0], cy=cfg[1], isA=cfg[3]===1, outs=isA?ys(cy,D.obs.act,50):[cy], top=ay[0], bot=ay[ay.length-1];
+    ay.forEach(function(y){ edge(xBox+52,cy,xU,y,.7); });
+    ay.forEach(function(y1){ ay.forEach(function(y2){ edge(xU,y1,xH,y2,1.1); edge(xH,y1,xF,y2,1.5); }); });
+    ay.forEach(function(y){ edge(xF,y,xZ,y,1.9); });                                  // u ＋ f：同一格相加
+    ay.forEach(function(y1){ outs.forEach(function(y2){ edge(xZ,y1,xO,y2,2.3); }); });
+    // 跳接：u 直接加到 xZ（藍色弧線，畫在這一塊的上面）
+    var arcY=top-(SHORT?70:54);
+    S('path',{d:'M'+xU+','+(top-14)+' C'+xU+','+arcY+' '+xZ+','+arcY+' '+xZ+','+(top-32),fill:'none',stroke:BLUE,'stroke-width':5,opacity:.85},gN);
+    S('path',{d:'M'+(xZ-12)+','+(top-34)+' L'+(xZ+12)+','+(top-34)+' L'+xZ+','+(top-14)+' Z',fill:BLUE,stroke:'none'},gN);   // 實心箭頭
+    if(bi===0||SHORT) T(gT,(xU+xZ)/2,arcY-14,'u 直接跳過去，加回來（residual）',22,BLUE,'middle',800);
+    ay.forEach(function(y){ node(xU,y,.9); node(xH,y,1.3); node(xF,y,1.7,'',13,'#ffe2b0'); node(xZ,y,2.1); });
+    outs.forEach(function(y){ node(xO,y,2.5,'o'+(isA?'':' vn'),19); });
+    if(!isA||SHORT){ var lab=bot+38;                                          // 欄位說明只寫一次（最下面那塊的下面）
+      [[xU,'u','一層（不加 tanh）','#566177'],[xH,'LN① · tanh','→ 一層 · tanh','#566177'],[xF,'多加的一層','= 修正量 f',AMB],[xZ,'u ＋ f','→ LN② · tanh','#566177']].forEach(function(c){
+        T(gT,c[0],lab,c[1],21,c[3],'middle',800); T(gT,c[0],lab+26,c[2],19,c[3],'middle',600); }); }
+    T(gT,xBox+70,top-(SHORT?140:isA?118:60),cfg[2],30,isA?BLUE:RED,'start',900);   // actor 的名字放高一點，不壓到 residual 的說明
+    if(isA){ ['油門','拉幾 G','滾轉 p','方向舵'].forEach(function(s,i){ T(gT,xO+36,outs[i]+9,s,26,INK,'start',700); }); T(gT,xO-14,outs[outs.length-1]+50,'輸出 μ（平均值）',22,'#566177','start',500); }
+    else { T(gT,xO+36,cy+9,'V',30,INK,'start',900); T(gT,xO+36,cy+42,'一個數字',22,'#566177','start',500); }
+  });
+};
+
+HOOK['p-nn']=function(k){ var v=document.querySelector('#nnsvg .vn'); if(v){ v.style.strokeWidth=k>=2?'9':''; } };
+
+/* --- 飛控：目標 G 與實際 G（PI 閉迴路的簡化示意） --- */
+P['p-ctrl']=function(){
+  var svg=document.getElementById('ctrlsvg');
+  // 簡化的閉迴路：目標 1 G → 5 G；u = P·e + 積分；plant 一階遲滯。只用來畫「P 先推一把、I 把剩下的補上」。
+  var dt=1/60, N=Math.round(3.2/dt), y=1, integ=0, tgt=[], act=[], up=[], ui=[];
+  for(var i=0;i<N;i++){ var t=i*dt, tg=t<.4?1:5, e=tg-y; var p=D.ctl.kp_g*e; integ+=D.ctl.ki_g*e*dt; var u=p+integ;
+    y+=(1+12*u-y)/0.25*dt; tgt.push(tg); act.push(y); up.push(p); ui.push(integ); }
+  var X0=70,X1=960,YA=20,YB=330;                                   // 上圖：G（0–6）
+  function xs(i){ return X0+(X1-X0)*i/(N-1); } function yg(v){ return YB-(YB-YA)*v/6; }
+  S('line',{x1:X0,y1:YB,x2:X1,y2:YB,stroke:INK,'stroke-width':3},svg); S('line',{x1:X0,y1:YA,x2:X0,y2:YB,stroke:INK,'stroke-width':3},svg);
+  [1,3,5].forEach(function(v){ S('line',{x1:X0,y1:yg(v),x2:X1,y2:yg(v),stroke:'rgba(15,27,51,.12)','stroke-width':2},svg); T(svg,X0-10,yg(v)+8,String(v),22,'#566177','end',700); });
+  T(svg,X0-10,YA+10,'G',22,'#566177','end',800); T(svg,X1,YB+28,'時間 →',22,'#566177','end',700);
+  S('path',{d:tgt.map(function(v,i){return (i?'L':'M')+xs(i).toFixed(1)+','+yg(v).toFixed(1)}).join(''),fill:'none',stroke:'#7a8aa8','stroke-width':5,'stroke-dasharray':'12 9'},svg);
+  S('path',{d:act.map(function(v,i){return (i?'L':'M')+xs(i).toFixed(1)+','+yg(v).toFixed(1)}).join(''),fill:'none',stroke:BLUE,'stroke-width':7,'stroke-linecap':'round'},svg);
+  T(svg,X1-6,yg(5)-14,'目標',24,'#566177','end',800); T(svg,xs(Math.round(1.55/dt)),yg(act[Math.round(1.55/dt)])+36,'實際',26,BLUE,'start',800);
+  // 步驟 1：差距
+  var g1=S('g',{'data-step':'1'},svg);
+  [0.8,1.3,1.9].forEach(function(tt){ var i=Math.round(tt/dt); S('line',{x1:xs(i),y1:yg(tgt[i]),x2:xs(i),y2:yg(act[i]),stroke:RED,'stroke-width':6},g1); head(g1,xs(i),yg(act[i])+2,'d',RED,12); });
+  T(g1,xs(Math.round(0.8/dt))+14,yg(3.4),'差多少',26,RED,'start',900);
+  // 步驟 2：舵面 ＝ P 項 ＋ I 項
+  var g2=S('g',{'data-step':'2'},svg); var Y0=530, SC=300;
+  S('line',{x1:X0,y1:Y0,x2:X1,y2:Y0,stroke:INK,'stroke-width':3},g2);
+  function yu(v){ return Y0-v*SC; }
+  S('path',{d:up.map(function(v,i){return (i?'L':'M')+xs(i).toFixed(1)+','+yu(v).toFixed(1)}).join(''),fill:'none',stroke:BLUE,'stroke-width':5},g2);
+  S('path',{d:ui.map(function(v,i){return (i?'L':'M')+xs(i).toFixed(1)+','+yu(v).toFixed(1)}).join(''),fill:'none',stroke:AMBER,'stroke-width':5},g2);
+  var cs=document.getElementById('clocksvg'); (function(){
+    var X0=60, DX=70, N=13;
+    T(cs,X0-10,36,'模擬、PI 飛控：每秒 60 幀',24,RED,'start',800);
+    for(var i=0;i<N;i++){ var x=X0+i*DX, big=(i%6===0); S('rect',{x:x-(big?6:3),y:58,width:big?12:6,height:big?58:34,rx:3,fill:big?BLUE:RED},cs); T(cs,x,138,String(i),20,'#566177','middle',700); }
+    T(cs,X0+(N-1)*DX+30,92,'幀',22,'#566177','start',700);
+    S('line',{x1:X0,y1:152,x2:X0+12*DX,y2:152,stroke:INK,'stroke-width':3},cs);
+    [0,6].forEach(function(i){ var x=X0+i*DX; box(cs,x-6,190,6*DX-12,70,'#fff',BLUE,4,14); T(cs,x+3*DX-6,222,i?'目標 B':'目標 A',28,BLUE,'middle',900); T(cs,x+3*DX-6,250,'小腦這 6 幀都照它調舵面',20,'#566177','middle',700); S('path',{d:'M'+x+',160 V186',stroke:BLUE,'stroke-width':4,fill:'none'},cs); head(cs,x,189,'d',BLUE,10); });
+    T(cs,X0+12*DX+8,222,'…',34,BLUE,'start',900);
+    T(cs,X0-10,300,'網路：每 6 幀（0.1 秒）想一次「想怎麼飛」',24,BLUE,'start',800);
+  })();
+  T(g2,X0+20,Y0-120,'舵面推多少 ＝',24,INK,'start',700);
+  T(g2,X0+250,Y0-120,'P 項（看現在差多少）',24,BLUE,'start',800); T(g2,X0+560,Y0-120,'＋ I 項（看累積差多少）',24,'#b27a00','start',800);
+};
+
+/* --- PPO：打 → 得分 → 更新（token 繞圈；點一下依序講每一個詞） --- */
+P['p-loop']=function(){
+  var path=document.getElementById('loopPath'), L=path.getTotalLength(), tok=document.getElementById('tok');
+  var pts=[0,1/3,2/3];
+  onTick('p-loop',function(t){
+    var u=((t/7)%1), p=path.getPointAtLength(u*L); tok.setAttribute('cx',p.x); tok.setAttribute('cy',p.y);
+    [1,2,3].forEach(function(k){ var n=document.getElementById('nd'+k); var d=Math.abs(((u-pts[k-1]+1.5)%1)-.5); var s=1+Math.max(0,.14-d*.6); n.style.transformBox='fill-box'; n.style.transformOrigin='center'; n.style.transform='scale('+s.toFixed(3)+')'; });
+  });
+};
+HOOK['p-loop']=function(k){ [1,2,3].forEach(function(j){ document.getElementById('nd'+j).classList.toggle('hot',j===k); }); };
+
+/* --- reward 五列 --- */
+P['p-reward']=function(){
+  var kw=D.reward.win+D.reward.kill, att3=D.reward.att*3, sec=Math.round(D.rules.w_time/D.reward.norm*100)/100;
+  var rows=[
+    ['1','比分差','這一步（我的 S<sub>adv</sub> 增加 − 對方增加）÷ '+fmt(D.reward.norm)+'：照比賽規則打','攻擊 1 秒 ＝ '+sec+'；整場約 ±1.5','b'],
+    ['2','終局','贏 ＋'+D.reward.win+'　輸 −'+D.reward.win+'；擊落再 ±'+D.reward.kill+'（擊落會提早結束、少拿位置分，不加會學成只刷分）；自己墜機再 −'+D.reward.crash,'擊落贏 ＋'+kw+'　被擊落 −'+kw+'<br>墜機 −'+(D.reward.win+D.reward.crash)+'　時間到贏 ＋'+D.reward.win,'b'],
+    ['3','攻擊時間','我在可擊落範圍：每秒 ＋'+D.reward.att+'；對方在範圍裡：每秒 −'+D.reward.att+'（比分差裡 1 秒只有 '+sec+'，從零學不會瞄準）','擊落（3 秒）＝ ＋'+att3,'r'],
+    ['4','每步姿態','每秒 ×'+D.reward.posture+' ×（我對準對方 − 對方對準我）<span class="mth" style="font-size:24px">　對準 ＝ exp<span style="font-size:1.1em">(</span>−<span class="fr"><b>TA</b><u>30°</u></span><span style="font-size:1.1em">)</span> × 距離權重</span>','整場一直完美對準才 ±15<br>實際小很多','r'],
+    ['5','對準引導','機頭往敵機轉近就加、轉開就扣；在 1° 附近也分得出好壞（官方位置分是 90° 尺度）','整場加總只看開局<br>不改變最佳打法','b']];
+  if(SHORT){   // 精簡版：一句話講每一項在教什麼
+    var easy=['照比賽規則：比分變好就加、變差就扣','贏加分、輸扣分；擊落 / 被擊落再加重；自己墜機重扣',
+      '機頭對準、在機砲範圍裡，每秒加分（被對方對準就扣）','我對準對方比對方對準我多 → 每步加一點',
+      '機頭往敵機轉近就加一點、轉開就扣一點'];
+    rows.forEach(function(r,i){ r[2]=easy[i]; });
+  }
+  var root=document.getElementById('rw');
+  rows.forEach(function(r,i){
+    var hot=r[4]==='r';
+    var el=H('div',{class:'card rise',id:'rwrow'+r[0],style:'--i:'+(i+1)+';left:96px;top:'+(255+i*118)+'px;width:1728px;height:100px;padding:0 34px;display:flex;align-items:center;gap:26px;box-shadow:8px 8px 0 '+(hot?RED:INK)+(hot?';background:#fff6f5':'')},root);
+    H('div',{class:'num',style:'font-size:50px;width:54px;color:'+(hot?RED:BLUE)},el,r[0]);
+    H('div',{style:'font-size:40px;font-weight:900;width:210px'},el,r[1]);
+    H('div',{style:'font-size:24px;line-height:1.35;flex:1'},el,r[2]);
+    H('div',{class:'num',style:'font-size:25px;line-height:1.3;text-align:right;width:470px;color:'+(hot?RED:INK)},el,r[3]);
+  });
+};
+HOOK['p-reward']=function(k){ var e=document.getElementById('rwrow5'); if(!e) return; e.style.boxShadow='8px 8px 0 '+(k>=2?RED:INK); e.style.background=k>=2?'#fff6f5':'#fff'; };
+
+/* --- PPO 細節：γ 曲線與一批資料 --- */
+P['p-adv']=function(){
+  var path=document.getElementById('gampath'), d=''; for(var i=0;i<=76;i++){ var t=i*40/76, w=Math.pow(D.ppo.gamma,t*10); d+=(i?'L':'M')+(10+i*10).toFixed(1)+','+(100-80*w).toFixed(1); } path.setAttribute('d',d);
+  var b=document.getElementById('batchsvg'); for(var j=0;j<D.ppo.mb;j++){ S('rect',{x:j*24.3,y:6,width:20,height:44,rx:4,fill:j%2?BL3:BLUE},b); }
+  T(b,0,76,'一批 '+fmt(D.ppo.batch)+' 筆 → 切成 '+D.ppo.mb+' 份',20,'#dce7ff','start',600);
+};
+
+/* --- 課程：三個量表同時收掉（示意） --- */
+P['p-cur']=function(){
+  var a=document.getElementById('c1svg'), b=document.getElementById('c2svg'), c=document.getElementById('c3svg');
+  // 1 開局：近距離追擊的距離與角度隨 g 變大；下面的條＝兩種開局的比例
+  S('rect',{x:0,y:0,width:484,height:250,rx:12,fill:'#f4f7fd'},a);
+  var arc=S('path',{fill:'none',stroke:BL3,'stroke-width':3,'stroke-dasharray':'6 8'},a);
+  var r1=jet(a,RED,90), b1=jet(a,BLUE,90);
+  var sA=S('rect',{y:182,height:44,fill:BL3,stroke:INK,'stroke-width':3},a), sB=S('rect',{y:182,height:44,fill:GREY,stroke:INK,'stroke-width':3},a);
+  var tA=T(a,24,212,'近距離追擊',22,INK,'start',800), tB=T(a,460,212,'正常開局',22,INK,'end',800);
+  // 2 錐
+  S('rect',{x:0,y:0,width:484,height:250,rx:12,fill:'#f4f7fd'},b);
+  var wedge=S('polygon',{fill:'rgba(21,83,224,.22)',stroke:BLUE,'stroke-width':3},b);
+  var b2=jet(b,BLUE,100); pose(b2,70,125,0); var r2=jet(b,RED,80); pose(r2,430,125,0);
+  T(b,242,36,'我方的錐：從寬慢慢收到官方 1°',22,'#566177','middle',700);
+  // 3 warm up
+  S('rect',{x:0,y:0,width:484,height:250,rx:12,fill:'#f4f7fd'},c);
+  var tg=[]; for(var i=0;i<3;i++){ var g=jet(c,RED,56); pose(g,90+i*150,52,i===1?-20:0); tg.push(g); }
+  ['直飛','轉彎','蛇行'].forEach(function(s,i){ T(c,90+i*150,98,s,22,'#566177','middle',700); });
+  var cols=[RED,BLUE,BL3,DR], names=['固定','自己','舊版','其他 seed'];
+  var rs=cols.map(function(col){ return S('rect',{y:130,height:50,fill:col,stroke:INK,'stroke-width':3},c); });
+  var lx=[20,112,204,296]; names.forEach(function(n,i){ S('rect',{x:lx[i],y:206,width:18,height:18,rx:4,fill:cols[i]},c); T(c,lx[i]+24,222,n,21,'#566177','start',700); });
+  var cyc=11, sh=D.lg.share, wf=D.cur.warm_fixed;
+  onTick('p-cur',function(t){
+    var u=Math.min(1,(t%cyc)/8.2), e=1-Math.pow(1-u,2);
+    var d=60+e*210, off=e*60;                                       // 1：距離 ↑、角度 ↑
+    pose(r1,360,70,0); pose(b1,360-d,70+off,-e*26);
+    arc.setAttribute('d','M'+(360-d)+','+(70+off)+' Q'+(360-d/2)+','+(70+off*.1)+' 360,70');
+    var share=D.cur.open_share*(1-e), wA=444*share;
+    sA.setAttribute('x',20); sA.setAttribute('width',Math.max(0,wA)); sB.setAttribute('x',20+wA); sB.setAttribute('width',444-wA);
+    tA.setAttribute('visibility',wA>130?'visible':'hidden');
+    document.getElementById('c1v').textContent=e.toFixed(2); document.getElementById('c1p').textContent=Math.round(share*100)+'%';
+    var ang=D.cur.cone_start+(D.cur.cone_end-D.cur.cone_start)*e, ta=Math.tan(ang*rad);   // 2
+    wedge.setAttribute('points','120,125 440,'+(125-320*ta)+' 440,'+(125+320*ta));
+    document.getElementById('c2v').textContent=ang.toFixed(1)+'°';
+    var parts=[wf*(1-e)+sh.fixed*e,(1-wf)*(1-e)+sh.self*e,sh.hist*e,sh.exploit*e];                           // 3
+    var sum=parts.reduce(function(x,y){return x+y},0), xx=20;
+    parts.forEach(function(p,i){ var w=444*p/sum; rs[i].setAttribute('x',xx); rs[i].setAttribute('width',Math.max(0,w)); xx+=w; });
+    tg.forEach(function(j){ j.setAttribute('opacity',(1-e).toFixed(2)); });
+    var win=D.cur.warm_lo+(D.cur.warm_hi-D.cur.warm_lo)*e;
+    document.getElementById('c3v').textContent='.'+String(Math.round(win*100)).padStart(2,'0');
+  });
+};
+HOOK['p-cur']=function(k){ [1,2,3].forEach(function(j){ var c=document.getElementById('cc'+j); if(c) c.style.boxShadow='10px 10px 0 '+(j===k?RED:BLUE); }); };
+
+/* --- GPU：128 × 128 ＝ 16 384 格 --- */
+P['p-gpu']=function(){
+  var cv=document.getElementById('gridc'), cx=cv.getContext('2d'); var N=128, CELL=14;
+  var ph=new Float32Array(N*N), sp=new Float32Array(N*N);
+  for(var i=0;i<N*N;i++){ ph[i]=Math.random()*6.283; sp[i]=.7+Math.random()*1.3; }
+  var hc=document.getElementById('heroCell');
+  S('rect',{x:0,y:0,width:640,height:400,fill:'#fff'},hc);
+  var hero=heroBuild(hc,0);
+  var frame=0;
+  onTick('p-gpu',function(t){
+    hero.update(t); frame++; if(frame%2) return;
+    cx.clearRect(0,0,1792,1792);
+    cx.strokeStyle='rgba(15,27,51,.13)'; cx.lineWidth=1; cx.beginPath();
+    for(var k=0;k<=N;k++){ cx.moveTo(k*CELL+.5,0); cx.lineTo(k*CELL+.5,1792); cx.moveTo(0,k*CELL+.5); cx.lineTo(1792,k*CELL+.5); } cx.stroke();
+    cx.fillStyle=RED; for(var i=0;i<N*N;i++){ var gx=(i%N)*CELL+CELL/2, gy=((i/N)|0)*CELL+CELL/2, a=ph[i]+t*sp[i]; cx.fillRect(gx+3.6*Math.cos(a+.9)-2.2,gy+3.2*Math.sin(a+.9)-2.2,4.4,4.4); }
+    cx.fillStyle=BLUE; for(var i=0;i<N*N;i++){ var gx=(i%N)*CELL+CELL/2, gy=((i/N)|0)*CELL+CELL/2, a=ph[i]+t*sp[i]; cx.fillRect(gx+3.2*Math.cos(a)-2.2,gy+2.8*Math.sin(a)-2.2,4.4,4.4); }
+  });
+};
+
+/* --- GPU 頁第 1 步：以前（CPU）對現在（GPU）同時跑。時鐘先 1 秒＝2 小時；GPU 到終點後，
+       CPU 改成「如果也練 10 億步」繼續跑，時鐘快轉 1 秒＝1 天（GPU 段 1 秒＝4 小時） --- */
+(function(){
+  var X0=360, X1=1470, MAXS=1e9, CPU_RATE=1500*3600, GPU_RATE=18500*3600, CPU_END=3e7, sr={on:false,t0:0};
+  var GPU_H=MAXS/GPU_RATE, CPU_H=CPU_END/CPU_RATE, CPU_FULL_H=MAXS/CPU_RATE;
+  function sx(steps){ return X0+(X1-X0)*Math.min(1,steps/MAXS); }
+  P['p-gpu-race']=function(){
+    var svg=document.getElementById('srSvg'), jets=[];
+    function group(y0,n,color,title,lines,end,endLab){
+      T(svg,0,y0+24,title,34,color,'start',900);
+      lines.forEach(function(t,k){ T(svg,0,y0+62+k*30,t,21,INK,'start',700); });
+      for(var k=0;k<n;k++){ var y=y0+10+k*20;
+        S('line',{x1:X0,y1:y,x2:X1,y2:y,stroke:'#d8d0bd','stroke-width':2},svg);
+        var g=jet(svg,color,34); jets.push({g:g,y:y,cpu:color===RED,v:1+Math.random()*.08}); }
+      var ex=sx(end), yb=y0+10+(n-1)*20;
+      S('line',{x1:ex,y1:y0-6,x2:ex,y2:yb+14,stroke:INK,'stroke-width':4,'stroke-dasharray':'8 6'},svg);
+      T(svg,ex,y0-14,endLab,20,INK,'middle',800);
+      return T(svg,ex+16,(y0+10+yb)/2+10,'',28,color,'start',900);
+    }
+    var gl=group(30,15,BLUE,'GPU（現在）',['網路 2×1024','15 條同時跑','每條約 1.85 萬步／秒','一條練 10 億步'],MAXS,'終點 10 億步');
+    var cl=group(390,6,RED,'CPU（9 月）',['網路 2×256','6 條同時跑','每條約 1,500 步／秒'],CPU_END,'以前的終點 3,000 萬步');
+    var ghostEnd=S('line',{x1:X1,y1:384,x2:X1,y2:504,stroke:RED,'stroke-width':3,'stroke-dasharray':'4 6',opacity:0},svg);
+    [0,2.5e8,5e8,7.5e8,1e9].forEach(function(v){ var x=sx(v); S('line',{x1:x,y1:545,x2:x,y2:555,stroke:'#566177','stroke-width':3},svg); T(svg,x,578,v?(v/1e8)+' 億步':'0',20,'#566177','middle',700); });
+    S('line',{x1:X0,y1:545,x2:X1,y2:545,stroke:'#566177','stroke-width':3},svg);
+    function draw(h,phase2){
+      jets.forEach(function(j){
+        var st=j.cpu?(phase2?Math.max(CPU_END,h*CPU_RATE*j.v):Math.min(CPU_END,h*CPU_RATE*j.v)):h*GPU_RATE*j.v;
+        pose(j.g,sx(st)-14,j.y,0); j.g.setAttribute('opacity',j.cpu&&phase2?.45:1); });
+      gl.textContent=h>=GPU_H?'約 15 小時':'';
+      cl.textContent=phase2?(h>=CPU_FULL_H?'如果也練 10 億步：7.7 天':''):(h>=CPU_H?(CPU_H.toFixed(1)+' 小時'):'');
+      cl.setAttribute('x',phase2?X1:sx(CPU_END)+16); cl.setAttribute('y',phase2?376:450+10); cl.setAttribute('text-anchor',phase2?'end':'start');
+      ghostEnd.setAttribute('opacity',phase2?1:0);
+      document.getElementById('srClock').textContent=h<48?h.toFixed(0)+' 小時':(h/24).toFixed(1)+' 天';
+      document.getElementById('srBanner').style.opacity=phase2&&h>=CPU_FULL_H?1:0;
+    }
+    function at(e){ var a=GPU_H/4; if(e<a) return [e*4,false]; if(e<a+1.2) return [GPU_H,false]; return [Math.min(CPU_FULL_H,GPU_H+(e-a-1.2)*24),true]; }
+    draw(0,false);
+    onTick('p-gpu',function(t){ if(!sr.on) return; var r=document.documentElement.classList.contains('still')?[CPU_FULL_H,true]:at(t-sr.t0); draw(r[0],r[1]); });
+  };
+  HOOK['p-gpu']=function(k){ var on=k===1; if(on&&!sr.on) sr.t0=TT; sr.on=on; };
+})();
+
+/* --- league：對手一直換 --- */
+var OPPS=[['pursuit_safe','fixed'],['最新的自己','self'],['official_sac','fixed'],['舊版（某個存檔）','hist'],['mimic_v2b','fixed'],['其他 seed 的主模型','exploit'],['seca_safe','fixed'],['舊版（某個存檔）','hist'],['最新的自己','self'],['brake_trap','fixed'],['其他 seed 的主模型','exploit'],['breaker_safe','fixed']];
+
+
+
+
+
+
+
+/* --- 總覽：一圈一圈長出來；每一塊用前面頁面的同一個視覺符號 --- */
+/* --- 我們怎麼走到這裡：一條主幹、沒走下去的葉子 --- */
+function drawTree(svg,spec){
+  var X0=170, DX=spec.dx||290, trunk=S('g',{},svg);
+  var pts=spec.nodes.map(function(n,i){ return [X0+i*DX, spec.y0-spec.slope*i]; });
+  var line=S('path',{d:'M'+(spec.start?60:X0-90)+','+(pts[0][1]+spec.slope*.4)+' '+pts.map(function(p){return 'L'+p[0]+','+p[1]}).join('')+(spec.open?' L'+(spec.open[0])+','+spec.open[1]:''),fill:'none',stroke:INK,'stroke-width':12,'stroke-linecap':'round','stroke-linejoin':'round',class:'draw',style:'--len:2200'},trunk);
+  if(spec.open){ S('path',{d:'M'+pts[pts.length-1][0]+','+pts[pts.length-1][1]+' L'+spec.open[0]+','+spec.open[1],fill:'none',stroke:BLUE,'stroke-width':8,'stroke-dasharray':'4 18','stroke-linecap':'round'},trunk); }
+  spec.nodes.forEach(function(n,i){
+    var x=pts[i][0], y=pts[i][1], up=(i%2===0);   // up：文字在主幹上方，葉子在下方
+    var now=n.now;
+    S('circle',{cx:x,cy:y,r:now?26:19,fill:now?BLUE:'#fff',stroke:INK,'stroke-width':6},trunk);
+    var lines=n.t.split('\n'), ty=up?y-44-(lines.length-1)*30:y+58;
+    lines.forEach(function(l,k){ T(trunk,x,ty+k*30,l,now?30:27,now?BLUE:INK,'middle',now?900:800); });
+    T(trunk,x,up?y-44-(lines.length-1)*30-34:y+58+lines.length*30+4,n.d||'',22,'#566177','middle',600);
+    var lv=(spec.leaves[i]||[]);
+    if(lv.length){
+      var gx=S('g',{'data-step':'1'},svg); var h=lv.length>3?64:78, gap=lv.length>3?8:10, w=spec.lw||268, tot=lv.length*(h+gap)-gap;
+      // 先畫連接線（在框後面），再畫框：線不會壓到字
+      var far = up ? y+50+tot : y-50-tot;
+      S('line',{x1:x,y1:y+(up?20:-20),x2:x,y2:far,stroke:RED,'stroke-width':4,'stroke-dasharray':'6 6'},gx);
+      lv.forEach(function(l,k){
+        var ly = up ? y+50+k*(h+gap) : y-50-h-k*(h+gap);
+        S('rect',{x:x-w/2,y:ly,width:w,height:h,rx:14,fill:'#fff6f5',stroke:RED,'stroke-width':3,'stroke-dasharray':'9 6'},gx);
+        T(gx,x-w/2+16,ly+(h>70?34:29),l[0],25,INK,'start',800); T(gx,x-w/2+16,ly+(h>70?64:54),'✕ '+l[1],22,RED,'start',700);
+      });
+    }
+  });
+  return pts;
+}
+
+/* --- 結果 1：考試總分的柱狀圖（精簡版） --- */
+function r3(v){ return v.toFixed(3).replace(/^0/,''); }    // .29 → .290
+
+
+
+/* --- 學習率：固定到 6 億，6 → 10 億直線降到 0 --- */
+P['p-lr']=function(){
+  var svg=document.getElementById('lrsvg'), X0=110, X1=1000, Y0=640, Y1=140, sx=function(b){return X0+(X1-X0)*b/14;}, sy=function(v){return Y0-(Y0-Y1)*v/3;};
+  S('rect',{x:sx(6),y:Y1-30,width:sx(10)-sx(6),height:Y0-Y1+30,fill:'#fff0c4',class:'rise',style:'--i:2'},svg);
+  T(svg,(sx(6)+sx(10))/2,Y1-44,'慢慢收',26,'#9a6b00','middle',900);
+  S('line',{x1:X0,y1:Y0,x2:X1+20,y2:Y0,stroke:INK,'stroke-width':4},svg); S('line',{x1:X0,y1:Y0,x2:X0,y2:Y1-40,stroke:INK,'stroke-width':4},svg);
+  [0,2,4,6,8,10,12,14].forEach(function(b){ T(svg,sx(b),Y0+40,b+' 億',24,'#566177','middle',800); });
+  T(svg,X0-16,sy(3)+8,'3×10⁻⁴',24,'#566177','end',800); T(svg,X0-16,sy(1)+8,'1×10⁻⁴',24,'#566177','end',800); T(svg,X0-16,Y0+8,'0',24,'#566177','end',800);
+  T(svg,(X0+X1)/2,Y0+86,'訓練步數（一步＝模型做一次決定）',24,INK,'middle',800);
+  S('path',{d:'M'+sx(0)+','+sy(3)+' H'+sx(6)+' L'+sx(10)+','+sy(0),fill:'none',stroke:BLUE,'stroke-width':10,'stroke-linejoin':'round','stroke-linecap':'round',class:'draw',style:'--len:1400;--i:2'},svg);
+  S('circle',{cx:sx(6),cy:sy(3),r:13,fill:'#fff',stroke:INK,'stroke-width':5,class:'pop',style:'--i:6'},svg);
+  var g0=S('g',{'data-step':'0','data-until':'1'},svg);
+  S('circle',{cx:sx(10),cy:sy(0),r:15,fill:AMBER,stroke:INK,'stroke-width':5},g0); T(g0,sx(10)-26,sy(0)-26,'一輪 10 億步',26,INK,'end',900);
+  var g1=S('g',{'data-step':'1'},svg);
+  [10,12].forEach(function(b){
+    S('rect',{x:sx(b),y:Y1-30,width:sx(b+2)-sx(b),height:Y0-Y1+30,fill:'#d3e2ff',opacity:.6},g1);
+    S('line',{x1:sx(b),y1:sy(0),x2:sx(b),y2:sy(1),stroke:INK,'stroke-width':4,'stroke-dasharray':'6 6'},g1);
+    S('path',{d:'M'+sx(b)+','+sy(1)+' L'+sx(b+2)+','+sy(0),fill:'none',stroke:BLUE,'stroke-width':10,'stroke-linecap':'round'},g1);
+    S('circle',{cx:sx(b),cy:sy(1)-44,r:24,fill:'#fff',stroke:INK,'stroke-width':4},g1); T(g1,sx(b),sy(1)-34,'⊕',30,INK,'middle',900);
+    T(g1,sx(b)+8,sy(1)-84,'平均',24,INK,'middle',900); });
+  S('circle',{cx:sx(14),cy:sy(0),r:15,fill:AMBER,stroke:INK,'stroke-width':5},g1); T(g1,sx(14)+24,sy(0)-22,'比賽用這個',26,INK,'start',900);
+};
+
+/* --- 權重平均再練：s14 的 6 億步 → 很多條 1.0B → 前 10 名平均 → 15 條再練 → 平均 → 15 條再練 → 交付 --- */
+P['p-soup']=function(){
+  var svg=document.getElementById('soupsvg'), Y=480, g=S('g',{},svg);
+  function fan(x0,y0,x1,ys,col,i0){ ys.forEach(function(y,k){ S('path',{d:'M'+x0+','+y0+' C'+(x0+60)+','+y0+' '+(x1-60)+','+y+' '+x1+','+y,fill:'none',stroke:col,'stroke-width':3,opacity:.75,class:'draw',style:'--len:400;--i:'+(i0+k*.03)},g); S('circle',{cx:x1,cy:y,r:6,fill:col,class:'pop',style:'--i:'+(i0+1)},g); }); }
+  function join(xs,ys,x1,y1,col,i0){ ys.forEach(function(y){ S('path',{d:'M'+xs+','+y+' C'+(xs+50)+','+y+' '+(x1-50)+','+y1+' '+x1+','+y1,fill:'none',stroke:col,'stroke-width':3,opacity:.6,class:'draw',style:'--len:300;--i:'+i0},g); }); }
+  function plus(x,y,i0,lab){ S('circle',{cx:x,cy:y,r:34,fill:'#fff',stroke:INK,'stroke-width':5,class:'pop',style:'--i:'+i0},g); T(g,x,y+14,'⊕',40,INK,'middle',900); T(g,x,y-50,lab,22,INK,'middle',900); }
+  function col(n,cy,sp){ var a=[]; for(var k=0;k<n;k++) a.push(cy+(k-(n-1)/2)*sp); return a; }
+  // 祖先
+  S('circle',{cx:150,cy:Y,r:40,fill:BLUE,stroke:INK,'stroke-width':5,class:'pop',style:'--i:1'},g); T(g,150,Y+80,'s14 的 6 億步',24,INK,'middle',900);
+  var c1=col(24,Y,17); fan(190,Y,470,c1,'#8fb1f5',2);
+  T(g,470,Y-235,'1.0B：168 條',23,INK,'middle',900); T(g,470,Y+240,'分支、reward 風格',21,'#566177','middle',800);
+  var top=c1.slice(0,10); top.forEach(function(y){ S('circle',{cx:470,cy:y,r:9,fill:BLUE,stroke:INK,'stroke-width':2},g); });
+  join(478,top,640,Y,BLUE,4); plus(640,Y,5,'前 10 名');
+  var c2=col(15,Y,24); fan(674,Y,900,c2,'#5f8de8',6); T(g,900,Y-210,'再練 2 億步 × 15',23,INK,'middle',900);
+  join(908,c2,1060,Y,BLUE,7); plus(1060,Y,8,'15 條全部');
+  var c3=col(15,Y,24); fan(1094,Y,1320,c3,'#1553e0',9); T(g,1320,Y-210,'再練 2 億步 × 15',23,INK,'middle',900);
+  S('circle',{cx:1320,cy:c3[2],r:16,fill:AMBER,stroke:INK,'stroke-width':4,class:'pop',style:'--i:11'},g);
+  S('path',{d:'M1340,'+c3[2]+' H1460',stroke:INK,'stroke-width':4,class:'draw',style:'--len:140;--i:11'},g); head(g,1470,c3[2],'r',INK);
+  var bx=S('g',{class:'pop',style:'--i:12'},g); box(bx,1480,c3[2]-50,340,100,'#fff0c4',INK,4,16);
+  T(bx,1650,c3[2]-10,'s272 → 交付',30,INK,'middle',900); T(bx,1650,c3[2]+28,'比賽用這顆',26,'#9a6b00','middle',900);
+  // 每階的考試（兩組對局平均）
+  [].forEach(function(p,k){ T(g,p[0],Y+(k?230:90),p[1],22,'#566177','middle',800); });
+};
+
+
+
+
+
+/* --- 考試面板 --- */
+P['p-exam']=function(){
+  var root=document.getElementById('exam');
+  var list=D.exam.concat([['A','擊落','對訓練過的規則對手的擊落率',0,'own']]);
+  list.forEach(function(e,i){
+    var col=i%4,row=(i/4)|0; var x=810+col*254, y=300+row*300; var ext=e[4]==='ext';
+    var c=H('div',{class:'card pop',style:'--i:'+(i+4)+';left:'+x+'px;top:'+y+'px;width:232px;height:262px;padding:16px 18px;border-color:'+INK+';box-shadow:8px 8px 0 '+(ext?RED:BLUE)},root);
+    H('div',{class:'num',style:'font-size:58px;line-height:1;color:'+(ext?RED:BLUE)},c,e[0]);
+    H('div',{class:'mono',style:'font-size:22px;font-weight:800;margin-top:8px;word-break:break-all'},c,e[1]);
+    H('div',{style:'font-size:23px;line-height:1.3;color:#566177;margin-top:6px'},c,e[2]+(e[3]?'<br><b style="color:#0f1b33">'+e[3]+' 場</b>':''));
+  });
+  var tot=H('div',{class:'card fillk pop',style:'--i:12;left:1572px;top:600px;width:232px;height:262px;padding:18px 20px'},root);
+  H('div',{style:'font-size:26px;opacity:.85;font-weight:700'},tot,'總分');
+  H('div',{style:'font-size:34px;line-height:1.3;margin-top:10px;font-weight:900'},tot,'6 項<br>的平均');
+};
+
+/* --- 程式地圖：地鐵圖（想讀程式的人從哪裡開始） --- */
+
+/* ===================== M：這一頁可以調的東西 ===================== */
+/* [名稱, 現在的值, 說明, 標籤]；標籤 sweep 掃描候選 · arch 排了實驗 · tried 試過 · idea 想法 · fixed 先不動。值的來源同 D（config/default.py 等） */
+var KTAG={sweep:'掃描候選',arch:'排了實驗',tried:'試過',idea:'想法',fixed:'先不動'};
+var KNOBS={};   // 最新版不放 M 面板
+
+function knobsShow(open){
+  var el=document.getElementById('knobs'), id=pages[cur].id, k=KNOBS[id];
+  document.getElementById('kh').hidden=!k;
+  if(open===undefined) open=!el.hidden;
+  if(!open||!k){ el.hidden=true; return; }
+  var title=(pages[cur].querySelector('.ttl')||{}).textContent||'';
+  el.innerHTML='<div class="x">M / Esc 關閉</div><h3>可以調的東西 · '+title+'</h3><div class="lg">'+
+    Object.keys(KTAG).map(function(t){return '<span class="tg '+t+'">'+KTAG[t]+'</span>'}).join('')+'</div>'+
+    k.map(function(r){return '<div class="kr"><b>'+r[0]+'</b><span class="now">'+r[1]+'</span><span class="nt">'+(r[2]||'')+'</span><span class="tg '+r[3]+'">'+KTAG[r[3]]+'</span></div>'}).join('');
+  el.hidden=false;
+}
+
+/* ===================== T：目錄（每頁的標題，點了直接跳過去） ===================== */
+function tocShow(open){
+  var el=document.getElementById('toc');
+  if(open===undefined) open=el.hidden;
+  if(!open){ el.hidden=true; return; }
+  knobsShow(false);
+  var rows=pages.map(function(p,i){
+    var k=((p.querySelector('.kick')||{}).textContent||'').trim(), t=((p.querySelector('.ttl')||{}).textContent||'').trim();
+    if(p.id==='p-title'){ k='封面'; t='tailgater'; } if(p.id==='p-end') t=t||'結尾'; if(p.id==='p-ref') k='參考資料';
+    return '<div class="it'+(i===cur?' cur':'')+'" data-i="'+i+'"><span class="n">'+String(i+1).padStart(2,'0')+'</span><span class="k">'+k+'</span><span class="t">'+t+'</span></div>';
+  });
+  function b(attr,val,on,txt){ return '<button type="button" '+attr+'="'+val+'"'+(on?' class="on"':'')+'>'+txt+'</button>'; }
+  el.innerHTML='<div class="x">T / Esc 關閉</div><h3>目錄</h3>'+
+    '<div class="ls" style="grid-template-rows:repeat('+Math.ceil(rows.length/2)+',auto)">'+rows.join('')+'</div>';
+  el.hidden=false;
+}
+function reloadAs(short,lam){   // 換版本：頁數不同 → 重新載入，停在同一頁（不在新版本裡就停在後面最近的一頁），不再跳開場畫面
+  var u=new URL(location.href);
+  if(short) u.searchParams.set('deck','short'); else u.searchParams.delete('deck');
+  if(lam) u.searchParams.set('lam',''); else u.searchParams.delete('lam');
+  u.searchParams.set('at',pages[cur].id); u.searchParams.set('nogate',''); u.hash='';
+  location.href=u.toString().replace(/=(&|$)/g,'$1');
+}
+document.addEventListener('click',function(e){
+  if(e.target.closest('#tocbtn')){ tocShow(); return; }
+  var dk=e.target.closest('#toc [data-deck-to]'); if(dk){ var sh=dk.getAttribute('data-deck-to')==='short'; if(sh!==SHORT) reloadAs(sh,LAM); return; }
+  var lm=e.target.closest('#toc [data-lam-to]'); if(lm){ var la=lm.getAttribute('data-lam-to')==='1'; if(la!==LAM) reloadAs(SHORT,la); return; }
+  var it=e.target.closest('#toc .it'); if(it){ var i=+it.getAttribute('data-i'); tocShow(false); if(i!==cur) go(i,{step:0}); }
+});
+
+/* ===================== 導覽、揭開、轉場 ===================== */
+var TJ_DECK=['p-title','p-rules','p-score','p-pos','p-obs','p-nn','p-ctrl','p-loop','p-reward','p-adv','p-tj-explore','p-open','p-cur','p-gpu','p-tj-selfplay','p-tj-league','p-tj-seed','p-lr','p-soup','p-xloop','p-tj-split','p-korea','p-exam','p-tj-shield','p-tj-roster','p-tj-end','p-ref'];   // 給 TJ 的 45 分鐘版（1106）
+var pages=TJ_DECK.map(function(id){return document.getElementById(id)})
+  .filter(function(p){return LAM||!p.hasAttribute('data-lam')});
+var N=pages.length, cur=0, busy=null;
+var maxStep=pages.map(function(p){return parseInt((SHORT&&p.getAttribute('data-steps-short'))||p.getAttribute('data-steps')||'0',10)});
+var stepOf=pages.map(function(){return 0});
+var stage=document.getElementById('stage');
+function fit(){ var s=Math.min(innerWidth/1920,innerHeight/1080); var x=(innerWidth-1920*s)/2, y=(innerHeight-1080*s)/2; stage.style.transform='translate('+x+'px,'+y+'px) scale('+s+')'; var h=document.getElementById('hud'); h.style.left=x+'px'; h.style.bottom=y+'px'; h.style.transform='scale('+s+')'; h.style.transformOrigin='0 100%'; h.style.width='1920px'; h.style.right='auto'; }
+addEventListener('resize',fit);
+
+/* 每一頁的下一頁用哪種轉場（key＝這一頁的 id；反向翻頁就倒著播）。每一種都有意義 */
+var TX={
+  'p-title':{t:'zoomIn', o:[1075,520], s:6},    // 標題 → 規則：鏡頭從兩架飛機之間鑽進去，變成追擊的幾何
+  'p-rules':{t:'pan'},                           // 擊落 → 比分：時間往右走，沒擊落就走到時間到比分
+  'p-score':{t:'pan'},                           // 比分 → 位置分：往右看 P 怎麼算
+  'p-pos':{t:'deeper'},                          // 規則 → 模型：往下一層，看模型裡面
+  'p-obs':{t:'pan'},                             // 觀測 → 網路：資料往右流進網路
+  'p-nn':{t:'pan'},                              // 網路 → 飛控：網路的輸出往右流進飛控
+  'p-ctrl':{t:'zoomOut', o:[620,360], s:5},      // 飛控 → PPO：網路＋飛控整套，縮成循環裡的「打」
+  'p-loop':{t:'zoomIn', o:[906,780], s:7},       // PPO → reward：鑽進「得分」那一格
+  'p-reward':{t:'pan'},                          // reward → 怎麼判斷好壞：拿分數去更新
+  'p-adv':{t:'pan'},                             // 判斷好壞 → 開局：換看環境那一側
+  'p-open':{t:'climb'},                          // 開局 → 課程：階梯，把開局一階一階調難
+  'p-cur':{t:'zoomOut', o:[960,540], s:8},       // 課程 → GPU：鏡頭拉遠，一場變成上萬場之一
+  'p-gpu':{t:'zoomIn', o:[960,540], s:640/28},   // GPU → 對手池：放大到其中一場，對手一直換
+  'p-lr':{t:'pan'},                              // 學習率 → 權重平均：往右接著看最後兩段
+  'p-soup':{t:'pan'},                            // 權重平均 → exploiter 交替
+  'p-xloop':{t:'wall'},                          // 訓練 → 考官從哪來：一道牆切開訓練和考試
+  'p-korea':{t:'pan'},                           // 韓國比賽 → 考官
+  'p-exam':{t:'pan'},                            // 考試 → 成績
+};
+if(SHORT) Object.assign(TX,{    // 精簡版跳過一些頁：相鄰的頁變了，轉場跟著換
+  'p-score':{t:'deeper'},                        // 規則 → 模型（跳過位置分）
+  'p-nn':{t:'zoomOut', o:[620,360], s:5},        // 網路 → PPO（跳過飛控）：網路縮成循環裡的「打」
+  'p-reward':{t:'pan'},                          // reward → 開局（跳過判斷好壞）
+});
+var DUR={pan:900,deeper:950,climb:950,zoomIn:1500,zoomOut:1500,iris:1300,blur:1200,wall:1300};
+var EASE='cubic-bezier(.65,0,.25,1)';
+function expKeys(a,b,n){ var out=[]; for(var i=0;i<=n;i++){ var u=i/n, e=u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2; out.push('scale('+(a*Math.pow(b/a,e)).toFixed(5)+')'); } return out; }
+function A(el,keys,opts){ return el.animate(keys,Object.assign({fill:'both'},opts)); }
+
+function runTransition(from,to,type,rev,params){
+  var d=DUR[type], opt={duration:d,easing:EASE}, anims=[], O=params.o||[960,540];
+  var o=O[0]+'px '+O[1]+'px';
+  from.style.zIndex=1; to.style.zIndex=2; from.style.willChange=to.style.willChange='transform,opacity'; from.classList.add('on'); to.classList.add('on');
+  if(type==='pan'){
+    var s=rev?-1:1;
+    anims.push(A(from,[{transform:'translateX(0)'},{transform:'translateX('+(-100*s)+'%)'}],opt));
+    anims.push(A(to,[{transform:'translateX('+(100*s)+'%)'},{transform:'translateX(0)'}],opt));
+  } else if(type==='deeper'){
+    if(!rev){ to.style.zIndex=3;
+      anims.push(A(from,[{transform:'scale(1)',opacity:1},{transform:'scale(.9)',opacity:.4}],opt));
+      anims.push(A(to,[{transform:'translateY(100%)'},{transform:'translateY(0)'}],opt));
+    } else { from.style.zIndex=3;
+      anims.push(A(to,[{transform:'scale(.9)',opacity:.4},{transform:'scale(1)',opacity:1}],opt));
+      anims.push(A(from,[{transform:'translateY(0)'},{transform:'translateY(100%)'}],opt));
+    }
+  } else if(type==='climb'){
+    var s2=rev?-1:1;
+    anims.push(A(from,[{transform:'translate(0,0)'},{transform:'translate('+(-100*s2)+'%,'+(-100*s2)+'%)'}],opt));
+    anims.push(A(to,[{transform:'translate('+(100*s2)+'%,'+(100*s2)+'%)'},{transform:'translate(0,0)'}],opt));
+  } else if(type==='zoomIn'||type==='zoomOut'){
+    var mode=type; if(rev) mode=(type==='zoomIn')?'zoomOut':'zoomIn';
+    var S0=params.s; from.style.transformOrigin=o; to.style.transformOrigin=o;
+    var K=24;
+    if(mode==='zoomIn'){
+      anims.push(A(from,expKeys(1,S0,K).map(function(tr,i){return {transform:tr,opacity:i/K<.55?1:Math.max(0,1-(i/K-.55)/.3)}}),{duration:d,easing:'linear'}));
+      anims.push(A(to,expKeys(1/S0,1,K).map(function(tr,i){return {transform:tr,opacity:i/K<.4?0:Math.min(1,(i/K-.4)/.3)}}),{duration:d,easing:'linear'}));
+    } else {
+      anims.push(A(from,expKeys(1,1/S0,K).map(function(tr,i){return {transform:tr,opacity:i/K<.5?1:Math.max(0,1-(i/K-.5)/.3)}}),{duration:d,easing:'linear'}));
+      anims.push(A(to,expKeys(S0,1,K).map(function(tr,i){return {transform:tr,opacity:i/K<.35?0:Math.min(1,(i/K-.35)/.3)}}),{duration:d,easing:'linear'}));
+    }
+  } else if(type==='iris'){
+    var ring=document.getElementById('ring'); ring.style.display='block'; ring.style.left=O[0]+'px'; ring.style.top=O[1]+'px';
+    var R=2400;
+    var top=rev?from:to; top.style.zIndex=3;
+    var c0='circle(0px at '+o+')', c1='circle('+R+'px at '+o+')';
+    if(!rev){ anims.push(A(to,[{clipPath:c0},{clipPath:c1}],opt)); anims.push(A(ring,[{width:'0px',height:'0px',opacity:1},{width:(2*R)+'px',height:(2*R)+'px',opacity:1}],opt)); }
+    else { anims.push(A(from,[{clipPath:c1},{clipPath:c0}],opt)); anims.push(A(ring,[{width:(2*R)+'px',height:(2*R)+'px',opacity:1},{width:'0px',height:'0px',opacity:1}],opt)); }
+    anims[anims.length-1].finished.then(function(){ ring.style.display='none'; });
+  } else if(type==='blur'){
+    if(!rev){ to.style.zIndex=3;
+      anims.push(A(to,[{filter:'blur(34px)',opacity:0,transform:'scale(1.05)'},{filter:'blur(14px)',opacity:.85,transform:'scale(1.03)',offset:.45},{filter:'blur(0)',opacity:1,transform:'scale(1)'}],opt));
+      anims.push(A(from,[{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(10px)'}],opt));
+    } else { from.style.zIndex=3;
+      anims.push(A(from,[{filter:'blur(0)',opacity:1,transform:'scale(1)'},{filter:'blur(34px)',opacity:0,transform:'scale(1.05)'}],opt));
+    }
+  } else if(type==='wall'){
+    var wall=document.getElementById('wall'); var rect=stage.getBoundingClientRect(); wall.style.display='block';
+    var sc=rect.width/1920; wall.style.transformOrigin='0 0'; wall.style.left=rect.left+'px'; wall.style.top=rect.top+'px';
+    var X=function(px){return 'translateX('+px+'px) scale('+sc+')'};
+    var top2=rev?from:to; top2.style.zIndex=3;
+    if(!rev){ anims.push(A(to,[{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0% 0 0)'}],opt)); anims.push(A(wall,[{transform:X(-28*sc)},{transform:X((1920-28)*sc)}],opt)); }
+    else { anims.push(A(from,[{clipPath:'inset(0 0% 0 0)'},{clipPath:'inset(0 100% 0 0)'}],opt)); anims.push(A(wall,[{transform:X((1920-28)*sc)},{transform:X(-28*sc)}],opt)); }
+    anims[anims.length-1].finished.then(function(){ wall.style.display='none'; });
+  }
+  return anims;
+}
+function clearStyles(p){ p.style.zIndex=''; p.style.willChange=''; p.style.transformOrigin=''; p.getAnimations().forEach(function(a){a.cancel()}); }
+
+/* 揭開：這一頁目前揭到第 k 步 */
+function applyStep(i,k){
+  stepOf[i]=k; var p=pages[i];
+  [].forEach.call(p.querySelectorAll('[data-step]'),function(e){
+    var from=parseInt(e.getAttribute('data-step'),10), until=e.hasAttribute('data-until')?parseInt(e.getAttribute('data-until'),10):1e9;
+    e.classList.toggle('shown',k>=from&&k<until);
+  });
+  if(HOOK[p.id]) HOOK[p.id](k);
+  if(i===cur) pips();
+}
+function pips(){
+  var el=document.getElementById('steps'); var n=maxStep[cur], k=stepOf[cur]; el.innerHTML='';
+  for(var j=0;j<n;j++){ var d=document.createElement('i'); d.className=j<k?'done':(j===k?'nx':''); el.appendChild(d); }
+  if(n&&k<n){ var s=document.createElement('span'); s.textContent='點一下'; el.appendChild(s); }
+}
+function hud(){
+  var dots=document.getElementById('dots'); if(!dots.children.length) for(var i=0;i<N;i++) dots.appendChild(document.createElement('b'));
+  [].forEach.call(dots.children,function(b,i){ b.className=i===cur?'cur':(i<cur?'past':''); });
+  document.getElementById('pg').textContent=String(cur+1).padStart(2,'0')+' / '+N;
+  history.replaceState(null,'','#'+(cur+1));
+  pips(); knobsShow();
+}
+function show(n,step){ // 直接顯示，不轉場
+  pages.forEach(function(p,i){ p.classList.toggle('on',i===n); p.style.setProperty('--t0','0s'); });
+  cur=n; applyStep(n,step===undefined?maxStep[n]:step); hud();
+}
+/* go：換頁。相鄰兩頁用專屬轉場；往後翻到新頁＝從第 0 步開始，往前翻回來＝那一頁全部揭開 */
+function go(n,opts){
+  opts=opts||{}; n=Math.max(0,Math.min(N-1,n));
+  if(busy) busy.finish();                       // 上一個轉場還在跑：直接收尾，再開新的
+  if(n===cur) return;
+  var from=pages[cur], to=pages[n], rev=n<cur;
+  var adj=Math.abs(n-cur)===1, tx=adj?TX[pages[Math.min(cur,n)].id]:null;
+  var step=opts.step!==undefined?opts.step:((adj&&!rev)||n===0?0:maxStep[n]);
+  applyStep(n,step);
+  cur=n; hud();
+  if(!tx){ pages.forEach(function(p){ p.classList.remove('on'); clearStyles(p); }); to.style.setProperty('--t0','.1s'); to.classList.add('on'); return; }
+  to.style.setProperty('--t0',(DUR[tx.t]*.55/1000)+'s');       // 進場動畫等轉場走一半才開始
+  var anims=runTransition(from,to,tx.t,rev,tx);
+  var token={finish:function(){ if(busy!==token) return; busy=null; anims.forEach(function(a){a.finish()}); end(from,to); }};
+  busy=token;
+  Promise.all(anims.map(function(a){return a.finished})).then(function(){ token.finish(); },function(){});
+  if(opts.hold) window.__hold={anims:anims,dur:DUR[tx.t],token:token};
+}
+function end(from,to){ from.classList.remove('on'); clearStyles(from); clearStyles(to); }
+function next(){ if(busy) busy.finish(); if(stepOf[cur]<maxStep[cur]) applyStep(cur,stepOf[cur]+1); else go(cur+1); }
+function prev(){ if(busy) busy.finish(); if(stepOf[cur]>0) applyStep(cur,stepOf[cur]-1); else go(cur-1); }
+
+addEventListener('keydown',function(e){
+  var k=e.key;
+  if(k==='ArrowRight'||k==='ArrowDown'||k===' '||k==='PageDown'||k==='Enter'){ e.preventDefault(); next(); }
+  else if(k==='ArrowLeft'||k==='ArrowUp'||k==='PageUp'||k==='Backspace'){ e.preventDefault(); prev(); }
+  else if(k==='Home'){ go(0); } else if(k==='End'){ go(N-1,{step:maxStep[N-1]}); }
+  else if(k==='m'||k==='M'){ tocShow(false); knobsShow(document.getElementById('knobs').hidden); }
+  else if(k==='t'||k==='T'){ tocShow(); }
+  else if(k==='Escape'){ knobsShow(false); tocShow(false); }
+  else if(k==='f'||k==='F'){ if(!document.fullscreenElement) document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+});
+document.addEventListener('click',function(e){ if(e.target.closest('a')||e.target.closest('#knobs')||e.target.closest('#toc')||e.target.closest('#tocbtn')) return; var s=window.getSelection&&window.getSelection(); if(s&&String(s).length) return; if(e.clientX<innerWidth*.25) prev(); else next(); });
+var tx0=null; addEventListener('touchstart',function(e){tx0=e.touches[0].clientX},{passive:true});
+addEventListener('touchend',function(e){ if(tx0===null) return; var dx=e.changedTouches[0].clientX-tx0; tx0=null; if(Math.abs(dx)>60){ if(dx<0) next(); else prev(); e.preventDefault(); } });
+addEventListener('hashchange',function(){ var n=parseInt(location.hash.slice(1),10); if(n>=1&&n<=N&&n-1!==cur) go(n-1,{step:maxStep[n-1]}); });
+
+/* ===================== 啟動 ===================== */
+var qs=new URLSearchParams(location.search);
+if(qs.has('still')) document.documentElement.classList.add('still');
+bind();
+pages.forEach(function(p){ if(P[p.id]) P[p.id](); });
+P['p-gpu-race']();
+fit();
+var start=parseInt(location.hash.slice(1),10); start=(start>=1&&start<=N)?start-1:0;
+if(qs.has('at')){                                          // 目錄換版本後：停在同一頁，或後面最近的一頁
+  var all=[].slice.call(document.querySelectorAll('.page')).map(function(p){return p.id}), j=all.indexOf(qs.get('at')), idx=-1;
+  for(;j>=0&&j<all.length&&idx<0;j++){ var want=all[j]; idx=pages.findIndex(function(p){return p.id===want}); }
+  start=idx>=0?idx:0;
+  var u0=new URL(location.href); u0.searchParams.delete('at'); history.replaceState(null,'',u0.toString().replace(/=(&|$)/g,'$1'));
+}
+pages.forEach(function(p,i){ applyStep(i,0); });
+show(start, qs.has('step')?parseInt(qs.get('step'),10):(start===0?0:maxStep[start]));
+requestAnimationFrame(function(ts){ lastTs=ts; loop(ts); });
+if(qs.has('knobs')) knobsShow(true);                      // 截圖用：一打開就顯示 M 面板
+if(qs.has('toc')) tocShow(true);                          // 截圖用：一打開就顯示目錄
+
+/* 開場遮罩：截圖／除錯參數（still、step、tx）或 ?nogate 時不出現 */
+(function(){
+  if(qs.has('still')||qs.has('step')||qs.has('tx')||qs.has('nogate')||document.fullscreenElement) return;
+  var gate=document.getElementById('gate'), gt=document.getElementById('gateT'), gs=document.getElementById('gateS'), gb=document.getElementById('gateB');
+  var phone=Math.min(screen.width,screen.height)<600 || (matchMedia('(pointer:coarse)').matches && Math.min(innerWidth,innerHeight)<700);
+  function close(){ gate.hidden=true; ['keydown','click','touchend'].forEach(function(t){ removeEventListener(t,eat,true); }); }
+  function eat(e){                                  // 遮罩開著時：這一下只用來關遮罩（電腦上順便進全螢幕），不翻頁
+    if(gate.hidden) return;
+    if(phone && e.target!==gb) { e.stopImmediatePropagation(); return; }
+    e.stopImmediatePropagation(); if(e.type==='keydown') e.preventDefault();
+    if(!phone){ var el=document.documentElement; if(el.requestFullscreen){ var pr=el.requestFullscreen(); if(pr&&pr.catch) pr.catch(function(){}); } }
+    close();
+  }
+  if(phone){ gt.textContent='請用電腦開啟投影片'; gs.textContent='投影片是 16:9 的大畫面，手機上字會太小、動畫也看不清楚。'; gb.hidden=false; }
+  else{ gt.innerHTML='點一下或按任意鍵開始'; gs.innerHTML='會切成全螢幕；之後按 <kbd>F</kbd> 可以切換全螢幕，<kbd>←</kbd> <kbd>→</kbd> 換頁'; }
+  ['keydown','click','touchend'].forEach(function(t){ addEventListener(t,eat,true); });
+  gate.hidden=false;
+})();
+
+/* 除錯／截圖用：?tx=<從第幾頁>:<進度 0–1> 例如 #10 加 ?tx=9:0.5 → 停在第 9 → 10 頁轉場的一半；?step=k 停在這頁的第 k 步 */
+window.__slides={ go:go, next:next, prev:prev, show:show, cur:function(){return cur}, step:function(){return stepOf[cur]}, freeze:function(p){ if(!window.__hold) return; var h=window.__hold; h.anims.forEach(function(a){ a.pause(); a.currentTime=p*h.dur; }); } };
+var q=qs.get('tx');
+if(q){ var pr=q.split(':'); var f=parseInt(pr[0],10)-1, pg=parseFloat(pr[1]); show(f); setTimeout(function(){ go(start,{hold:true}); setTimeout(function(){ window.__slides.freeze(pg); },30); },200); }
+})();
+</script>
+</body>
+</html>
